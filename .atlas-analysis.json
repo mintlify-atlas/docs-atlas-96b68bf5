@@ -1,0 +1,72 @@
+{
+  "projectType": "sdk-library",
+  "projectName": "Svelte ASCII Art",
+  "projectDescription": "A Svelte 5 component for rendering ASCII art as scalable SVG with optional grid overlay and frame",
+  "theme": "palm",
+  "primaryColor": "#FF3E00",
+  "lightColor": "#FF6B35",
+  "darkColor": "#FF3E00",
+  "navigation": {
+    "groups": [
+      {
+        "group": "Get Started",
+        "pages": [
+          "introduction",
+          "installation",
+          "quickstart"
+        ]
+      },
+      {
+        "group": "Core Concepts",
+        "pages": [
+          "concepts/ascii-component",
+          "concepts/grid-mode",
+          "concepts/styling"
+        ]
+      },
+      {
+        "group": "Guides",
+        "pages": [
+          "guides/props",
+          "guides/margins-and-frames",
+          "guides/custom-fonts",
+          "guides/exporting"
+        ]
+      },
+      {
+        "group": "API Reference",
+        "pages": [
+          "api/asciiart-component",
+          "api/export-functions",
+          "api/types"
+        ]
+      },
+      {
+        "group": "Examples",
+        "pages": [
+          "examples/basic-usage",
+          "examples/advanced-styling",
+          "examples/export-workflows"
+        ]
+      }
+    ]
+  },
+  "keyFeatures": [
+    "Renders ASCII art as scalable SVG",
+    "Optional grid overlay with customizable styling",
+    "Frame support with margin controls",
+    "Export to SVG with embedded styles",
+    "Export to PNG with scale factor support",
+    "Customizable cell aspect ratio",
+    "TypeScript support with full type definitions"
+  ],
+  "publicApiSurface": [
+    "AsciiArt - Main Svelte component",
+    "exportSvg(svgEl, options) - Export SVG with styles",
+    "exportSvgToPng(svgEl, options) - Export to PNG",
+    "svgStringToPng(svgString, options) - Convert SVG string to PNG",
+    "ExportSvgOptions - Type for SVG export options",
+    "ExportPngOptions - Type for PNG export options",
+    "SvgStringToPngOptions - Type for string conversion options"
+  ]
+}
