@@ -1,0 +1,374 @@
+---
+title: Margins & Frames
+description: How to use margins and frames effectively in svelte-asciiart
+---
+
+Margins and frames are key features for controlling the layout and presentation of your ASCII art.
+
+## Understanding the Layout Model
+
+The component uses a box model with three layers:
+
+<Steps>
+  <Step title="Content">
+    Your ASCII art text, automatically sized to fit all characters
+  </Step>
+  <Step title="Frame">
+    A rectangular boundary defined by `rows` and `cols` props
+  </Step>
+  <Step title="Margin">
+    Empty space around the frame, specified in character cell units
+  </Step>
+</Steps>
+
+```
+┌─────────────────────────── Margin ───────────────────────────┐
+│                                                                │
+│   ┌────────────────────── Frame ──────────────────────┐      │
+│   │                                                    │      │
+│   │   Hello World!    ← Content                       │      │
+│   │   ASCII Art                                        │      │
+│   │                                                    │      │
+│   └────────────────────────────────────────────────────┘      │
+│                                                                │
+└────────────────────────────────────────────────────────────────┘
+```
+
+## Using Margins
+
+Margins add whitespace around your content, useful for creating breathing room or preventing content from touching edges.
+
+### Margin Syntax
+
+The `margin` prop follows CSS syntax:
+
+<CodeGroup>
+```svelte All Sides
+<!-- 1 cell margin on all sides -->
+<AsciiArt text={art} margin={1} />
+```
+
+```svelte Vertical & Horizontal
+<!-- 1 cell top/bottom, 2 cells left/right -->
+<AsciiArt text={art} margin={[1, 2]} />
+```
+
+```svelte Individual Sides
+<!-- [top, right, bottom, left] -->
+<AsciiArt text={art} margin={[1, 2, 1, 2]} />
+```
+</CodeGroup>
+
+### Practical Margin Examples
+
+<CodeGroup>
+```svelte Card Layout
+<script>
+  import { AsciiArt } from 'svelte-asciiart';
+  
+  const card = `
+╔════════════╗
+║  Welcome   ║
+║  User!     ║
+╚════════════╝
+  `.trim();
+</script>
+
+<!-- Add padding around card -->
+<div class="container">
+  <AsciiArt
+    text={card}
+    margin={2}
+    class="card"
+  />
+</div>
+
+<style>
+  .container {
+    background: #f5f5f5;
+    border-radius: 8px;
+  }
+  :global(.card) {
+    width: 100%;
+    height: 100%;
+  }
+</style>
+```
+
+```svelte Asymmetric Layout
+<script>
+  const label = `→ Important`;
+</script>
+
+<!-- More space on left for pointer -->
+<AsciiArt
+  text={label}
+  margin={[0, 1, 0, 3]}
+/>
+```
+</CodeGroup>
+
+<Tip>
+Margins are specified in **character cell units**, not pixels. A margin of `1` equals the height of one text line.
+</Tip>
+
+## Using Frames
+
+Frames add a visible rectangular boundary around your content.
+
+### Basic Frame Usage
+
+<CodeGroup>
+```svelte Simple Frame
+<AsciiArt
+  text={art}
+  frame
+  frameClass="border"
+/>
+
+<style>
+  :global(.border) {
+    stroke: #333;
+    stroke-width: 0.05;
+  }
+</style>
+```
+
+```svelte Styled Frame
+<AsciiArt
+  text={art}
+  frame
+  frameClass="fancy-border"
+/>
+
+<style>
+  :global(.fancy-border) {
+    stroke: #4a90e2;
+    stroke-width: 0.08;
+    stroke-dasharray: 0.2 0.1;
+  }
+</style>
+```
+</CodeGroup>
+
+### Controlling Frame Size
+
+By default, the frame automatically sizes to fit your content. Use `rows` and `cols` to set explicit dimensions:
+
+```svelte
+<script>
+  const text = `Hi!`;
+</script>
+
+<!-- Auto-sized frame (3 cols × 1 row) -->
+<AsciiArt text={text} frame />
+
+<!-- Fixed-size frame (10 cols × 5 rows) -->
+<AsciiArt text={text} frame rows={5} cols={10} />
+```
+
+<Warning>
+Content that exceeds the frame size will overflow into the margin area.
+</Warning>
+
+## Combining Frames and Margins
+
+Frames and margins work together to create well-composed layouts:
+
+<CodeGroup>
+```svelte Framed with Padding
+<script>
+  import { AsciiArt } from 'svelte-asciiart';
+  
+  const diagram = `
+  ┌───┐
+  │ A │
+  └─┬─┘
+    │
+  ┌─▼─┐
+  │ B │
+  └───┘
+  `.trim();
+</script>
+
+<AsciiArt
+  text={diagram}
+  frame
+  margin={[1, 2]}
+  frameClass="diagram-frame"
+  class="diagram"
+/>
+
+<style>
+  :global(.diagram) {
+    background: #fafafa;
+  }
+  :global(.diagram-frame) {
+    stroke: #ff6b6b;
+    stroke-width: 0.06;
+  }
+</style>
+```
+
+```svelte With Grid
+<script>
+  const code = `
+function hello() {
+  console.log("Hi");
+}
+  `.trim();
+</script>
+
+<AsciiArt
+  text={code}
+  grid
+  frame
+  margin={1}
+  gridClass="code-grid"
+  frameClass="code-frame"
+/>
+
+<style>
+  :global(.code-grid) {
+    stroke: #e0e0e0;
+    stroke-width: 0.02;
+    opacity: 0.4;
+  }
+  :global(.code-frame) {
+    stroke: #2c3e50;
+    stroke-width: 0.04;
+  }
+</style>
+```
+</CodeGroup>
+
+## Real-World Examples
+
+Here are complete examples from the source:
+
+<CodeGroup>
+```svelte Interactive Demo
+<script lang="ts">
+  import { AsciiArt } from 'svelte-asciiart';
+  
+  let marginTop = $state(1);
+  let marginRight = $state(2);
+  let marginBottom = $state(1);
+  let marginLeft = $state(2);
+  let frame = $state(true);
+  
+  const art = `
++----------+
+|  Hello   |
+|  World!  |
++----------+
+  `.trim();
+  
+  const margin = $derived(
+    [marginTop, marginRight, marginBottom, marginLeft] as [
+      number,
+      number,
+      number,
+      number
+    ]
+  );
+</script>
+
+<AsciiArt
+  text={art}
+  {frame}
+  {margin}
+  frameClass="demo-frame"
+/>
+
+<style>
+  :global(.demo-frame) {
+    stroke: #FFB366;
+    stroke-width: 0.05;
+  }
+</style>
+```
+
+```svelte Documentation Card
+<script>
+  const card = `
+╭─────────────────╮
+│  Documentation  │
+│                 │
+│  > Getting      │
+│    Started      │
+│                 │
+│  > API Ref      │
+╰─────────────────╯
+  `.trim();
+</script>
+
+<div class="card-wrapper">
+  <AsciiArt
+    text={card}
+    margin={[2, 3]}
+    class="doc-card"
+  />
+</div>
+
+<style>
+  .card-wrapper {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 12px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+  }
+  :global(.doc-card text),
+  :global(.doc-card tspan) {
+    fill: white;
+    font-weight: 500;
+  }
+</style>
+```
+</CodeGroup>
+
+## Margin Parsing Implementation
+
+From the source code (AsciiArt.svelte:38-42), margins are parsed as follows:
+
+```typescript
+function parseMargin(m: Margin): {
+  top: number;
+  right: number;
+  bottom: number;
+  left: number
+} {
+  if (typeof m === 'number')
+    return { top: m, right: m, bottom: m, left: m };
+  if (m.length === 2)
+    return { top: m[0], right: m[1], bottom: m[0], left: m[1] };
+  return { top: m[0], right: m[1], bottom: m[2], left: m[3] };
+}
+```
+
+## Best Practices
+
+<Steps>
+  <Step title="Start with auto-sizing">
+    Let the component determine optimal dimensions first, then adjust if needed
+  </Step>
+  <Step title="Use margins for spacing">
+    Prefer margins over manual spacing in your text for cleaner code
+  </Step>
+  <Step title="Frame for emphasis">
+    Add frames to draw attention to important content
+  </Step>
+  <Step title="Test different aspect ratios">
+    Adjust `cellAspect` if frames appear distorted with your chosen font
+  </Step>
+</Steps>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Component Props" icon="sliders" href="/guides/props">
+    Complete reference for all component props
+  </Card>
+  <Card title="Custom Fonts" icon="font" href="/guides/custom-fonts">
+    Use custom monospace fonts for better visuals
+  </Card>
+</CardGroup>

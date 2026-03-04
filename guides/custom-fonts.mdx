@@ -1,0 +1,423 @@
+---
+title: Custom Fonts
+description: Using custom monospace fonts with svelte-asciiart
+---
+
+svelte-asciiart uses monospace fonts to ensure proper character alignment. You can customize the font to match your design or improve readability.
+
+## Default Font Stack
+
+The component uses a comprehensive system font stack by default (AsciiArt.svelte:69-70):
+
+```typescript
+const defaultFontStack =
+  'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace';
+```
+
+This ensures a quality monospace font is available across all platforms without requiring external fonts.
+
+## Using CSS Variables
+
+The recommended way to customize fonts is through CSS variables:
+
+### Basic Font Change
+
+```svelte
+<AsciiArt
+  text={art}
+  class="custom-font"
+/>
+
+<style>
+  :global(.custom-font) {
+    --ascii-font-family: 'Fira Code', monospace;
+  }
+</style>
+```
+
+### Inline Styles
+
+```svelte
+<AsciiArt
+  text={art}
+  style="--ascii-font-family: 'JetBrains Mono', monospace;"
+/>
+```
+
+## Loading Web Fonts
+
+When using web fonts, ensure they're loaded before rendering:
+
+<CodeGroup>
+```svelte Google Fonts
+<svelte:head>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    rel="stylesheet"
+    href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600&display=swap"
+  />
+</svelte:head>
+
+<script>
+  import { AsciiArt } from 'svelte-asciiart';
+  const art = `Hello, World!`;
+</script>
+
+<AsciiArt
+  text={art}
+  class="fira-code"
+/>
+
+<style>
+  :global(.fira-code) {
+    --ascii-font-family: 'Fira Code', ui-monospace, monospace;
+  }
+</style>
+```
+
+```svelte Self-Hosted Fonts
+<style>
+  @font-face {
+    font-family: 'My Mono Font';
+    src: url('/fonts/my-mono-font.woff2') format('woff2');
+    font-weight: 400;
+    font-display: swap;
+  }
+  
+  :global(.my-custom-font) {
+    --ascii-font-family: 'My Mono Font', monospace;
+  }
+</style>
+
+<AsciiArt
+  text={art}
+  class="my-custom-font"
+/>
+```
+</CodeGroup>
+
+## Popular Monospace Fonts
+
+Here are recommended monospace fonts that work well with ASCII art:
+
+### JetBrains Mono
+
+<CodeGroup>
+```svelte Component
+<svelte:head>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    rel="stylesheet"
+    href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&display=swap"
+  />
+</svelte:head>
+
+<AsciiArt
+  text={art}
+  style="--ascii-font-family: 'JetBrains Mono', ui-monospace, monospace;"
+/>
+```
+
+```css Styles
+:global(.jetbrains-mono) {
+  --ascii-font-family: 'JetBrains Mono', ui-monospace, monospace;
+}
+```
+</CodeGroup>
+
+### Fira Code
+
+<CodeGroup>
+```svelte Component
+<svelte:head>
+  <link
+    rel="stylesheet"
+    href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600&display=swap"
+  />
+</svelte:head>
+
+<AsciiArt
+  text={art}
+  class="fira-code"
+/>
+
+<style>
+  :global(.fira-code) {
+    --ascii-font-family: 'Fira Code', ui-monospace, monospace;
+  }
+</style>
+```
+</CodeGroup>
+
+### Source Code Pro
+
+```svelte
+<svelte:head>
+  <link
+    rel="stylesheet"
+    href="https://fonts.googleapis.com/css2?family=Source+Code+Pro:wght@400;600&display=swap"
+  />
+</svelte:head>
+
+<AsciiArt
+  text={art}
+  style="--ascii-font-family: 'Source Code Pro', ui-monospace, monospace;"
+/>
+```
+
+### IBM Plex Mono
+
+```svelte
+<svelte:head>
+  <link
+    rel="stylesheet"
+    href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&display=swap"
+  />
+</svelte:head>
+
+<AsciiArt
+  text={art}
+  style="--ascii-font-family: 'IBM Plex Mono', ui-monospace, monospace;"
+/>
+```
+
+## Font Weight
+
+Control font weight through CSS:
+
+<CodeGroup>
+```svelte Normal Weight
+<AsciiArt
+  text={art}
+  class="normal-weight"
+/>
+
+<style>
+  :global(.normal-weight text),
+  :global(.normal-weight tspan) {
+    font-weight: 400;
+  }
+</style>
+```
+
+```svelte Bold Weight
+<AsciiArt
+  text={art}
+  class="bold-weight"
+/>
+
+<style>
+  :global(.bold-weight text),
+  :global(.bold-weight tspan) {
+    font-weight: 700;
+  }
+</style>
+```
+</CodeGroup>
+
+## Adjusting Cell Aspect Ratio
+
+Different fonts have different character widths. Adjust the `cellAspect` prop to prevent distortion:
+
+```svelte
+<script>
+  import { AsciiArt } from 'svelte-asciiart';
+  
+  const box = `
+  ┌─────┐
+  │ Box │
+  └─────┘
+  `.trim();
+</script>
+
+<!-- Default aspect ratio -->
+<AsciiArt text={box} cellAspect={0.6} />
+
+<!-- Wider characters -->
+<AsciiArt text={box} cellAspect={0.7} />
+
+<!-- Narrower characters -->
+<AsciiArt text={box} cellAspect={0.5} />
+```
+
+<Tip>
+The default `cellAspect={0.6}` works for most monospace fonts. If your ASCII art looks stretched or compressed, adjust this value between `0.5` and `0.7`.
+</Tip>
+
+## Complete Example from Source
+
+Here's how the demo app handles font selection (+page.svelte:25-47):
+
+```typescript
+const monoFonts = [
+  {
+    key: 'system',
+    label: 'System',
+    family: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace'
+  },
+  {
+    key: 'jetbrains',
+    label: 'JetBrains Mono',
+    family: '"JetBrains Mono", ui-monospace, monospace'
+  },
+  {
+    key: 'fira',
+    label: 'Fira Code',
+    family: '"Fira Code", ui-monospace, monospace'
+  },
+  {
+    key: 'source',
+    label: 'Source Code Pro',
+    family: '"Source Code Pro", ui-monospace, monospace'
+  },
+  {
+    key: 'plex',
+    label: 'IBM Plex Mono',
+    family: '"IBM Plex Mono", ui-monospace, monospace'
+  }
+] as const;
+```
+
+## Font Selector Component
+
+Create a reusable font selector:
+
+<CodeGroup>
+```svelte FontSelector.svelte
+<script lang="ts">
+  import { AsciiArt } from 'svelte-asciiart';
+  import * as Select from '$lib/components/ui/select';
+  
+  interface Props {
+    text: string;
+  }
+  
+  let { text }: Props = $props();
+  
+  const fonts = [
+    { value: 'system', label: 'System Mono' },
+    { value: 'jetbrains', label: 'JetBrains Mono' },
+    { value: 'fira', label: 'Fira Code' },
+    { value: 'source', label: 'Source Code Pro' }
+  ];
+  
+  let selectedFont = $state('system');
+  
+  const fontFamily = $derived({
+    system: 'ui-monospace, monospace',
+    jetbrains: '"JetBrains Mono", monospace',
+    fira: '"Fira Code", monospace',
+    source: '"Source Code Pro", monospace'
+  }[selectedFont]);
+</script>
+
+<svelte:head>
+  {#if selectedFont !== 'system'}
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family={selectedFont === 'jetbrains' ? 'JetBrains+Mono' : selectedFont === 'fira' ? 'Fira+Code' : 'Source+Code+Pro'}:wght@400;600&display=swap"
+    />
+  {/if}
+</svelte:head>
+
+<div class="space-y-4">
+  <Select.Root bind:value={selectedFont}>
+    <Select.Trigger>
+      {fonts.find(f => f.value === selectedFont)?.label}
+    </Select.Trigger>
+    <Select.Content>
+      {#each fonts as font}
+        <Select.Item value={font.value}>{font.label}</Select.Item>
+      {/each}
+    </Select.Content>
+  </Select.Root>
+  
+  <AsciiArt
+    {text}
+    class="dynamic-font"
+    style="--ascii-font-family: {fontFamily};"
+  />
+</div>
+```
+
+```svelte Usage
+<script>
+  import FontSelector from './FontSelector.svelte';
+  
+  const art = `
+  ╔═══════════╗
+  ║   Hello   ║
+  ╚═══════════╝
+  `.trim();
+</script>
+
+<FontSelector text={art} />
+```
+</CodeGroup>
+
+## Styling Text Elements
+
+Target text elements directly for advanced styling:
+
+```svelte
+<AsciiArt
+  text={art}
+  class="styled-text"
+/>
+
+<style>
+  :global(.styled-text text),
+  :global(.styled-text tspan) {
+    font-family: 'Fira Code', monospace;
+    font-weight: 500;
+    letter-spacing: 0.05em;
+    fill: #2c3e50;
+  }
+</style>
+```
+
+<Warning>
+Avoid using proportional fonts (like Arial or Times New Roman). They will break character alignment and make your ASCII art unreadable.
+</Warning>
+
+## Font Loading Strategy
+
+For better performance, use the `font-display: swap` strategy:
+
+```css
+@font-face {
+  font-family: 'My Mono Font';
+  src: url('/fonts/my-mono-font.woff2') format('woff2');
+  font-weight: 400;
+  font-display: swap; /* Show fallback font while loading */
+}
+```
+
+## Implementation Details
+
+From AsciiArt.svelte:100, the font is applied via inline styles:
+
+```svelte
+<svg
+  style="width: 100%; height: 100%; font-family: var(--ascii-font-family, {defaultFontStack});"
+>
+  <!-- content -->
+</svg>
+```
+
+This allows CSS variable override while providing a sensible default.
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Exporting" icon="download" href="/guides/exporting">
+    Export your ASCII art to SVG and PNG
+  </Card>
+  <Card title="Component Props" icon="sliders" href="/guides/props">
+    Explore all available props
+  </Card>
+</CardGroup>

@@ -1,0 +1,505 @@
+---
+title: Exporting
+description: Export your ASCII art to SVG and PNG formats
+---
+
+svelte-asciiart provides powerful export utilities to save your rendered ASCII art as SVG or PNG files.
+
+## Export Functions
+
+The library exports three main functions (utils.ts:1-220):
+
+<CodeGroup>
+```typescript exportSvg
+import { exportSvg } from 'svelte-asciiart';
+
+// Export with embedded styles
+const svgString = exportSvg(svgElement, {
+  includeBackground: true,
+  backgroundColor: '#ffffff'
+});
+```
+
+```typescript exportSvgToPng
+import { exportSvgToPng } from 'svelte-asciiart';
+
+// Export as PNG data URL
+const dataUrl = await exportSvgToPng(svgElement, {
+  includeBackground: true,
+  backgroundColor: '#ffffff',
+  scale: 2
+});
+```
+
+```typescript svgStringToPng
+import { svgStringToPng } from 'svelte-asciiart';
+
+// Convert SVG string to PNG
+const svgMarkup = exportSvg(svgElement);
+const pngBlob = await svgStringToPng(svgMarkup, {
+  scale: 2,
+  output: 'blob'
+});
+```
+</CodeGroup>
+
+## Binding the SVG Element
+
+To export, you must first bind the SVG element:
+
+```svelte
+<script lang="ts">
+  import { AsciiArt, exportSvg } from 'svelte-asciiart';
+  
+  let svg = $state<SVGSVGElement>();
+  const text = `Hello, World!`;
+</script>
+
+<AsciiArt bind:svg {text} />
+
+{#if svg}
+  <button onclick={() => {
+    const markup = exportSvg(svg);
+    console.log(markup);
+  }}>
+    Export SVG
+  </button>
+{/if}
+```
+
+<Tip>
+The `svg` variable will be `undefined` until the component mounts. Always check if it exists before exporting.
+</Tip>
+
+## Exporting to SVG
+
+The `exportSvg()` function returns an SVG string with all styles embedded:
+
+### Basic SVG Export
+
+<CodeGroup>
+```svelte Copy to Clipboard
+<script lang="ts">
+  import { AsciiArt, exportSvg } from 'svelte-asciiart';
+  
+  let svg = $state<SVGSVGElement>();
+  
+  async function copySvg() {
+    if (!svg) return;
+    const markup = exportSvg(svg);
+    await navigator.clipboard.writeText(markup);
+  }
+</script>
+
+<AsciiArt bind:svg text={art} />
+
+{#if svg}
+  <button onclick={copySvg}>Copy SVG</button>
+{/if}
+```
+
+```svelte Download File
+<script lang="ts">
+  import { AsciiArt, exportSvg } from 'svelte-asciiart';
+  
+  let svg = $state<SVGSVGElement>();
+  
+  function downloadSvg() {
+    if (!svg) return;
+    const markup = exportSvg(svg);
+    const blob = new Blob([markup], { type: 'image/svg+xml' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'ascii-art.svg';
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+</script>
+
+<AsciiArt bind:svg text={art} />
+
+{#if svg}
+  <button onclick={downloadSvg}>Download SVG</button>
+{/if}
+```
+</CodeGroup>
+
+### SVG Export Options
+
+<ParamField path="includeBackground" type="boolean" default="false">
+  Add a background rectangle to the SVG.
+  
+  ```typescript
+  const markup = exportSvg(svg, {
+    includeBackground: true,
+    backgroundColor: '#f5f5f5'
+  });
+  ```
+</ParamField>
+
+<ParamField path="backgroundColor" type="string">
+  Background color when `includeBackground` is `true`. Any valid CSS color.
+  
+  ```typescript
+  exportSvg(svg, {
+    includeBackground: true,
+    backgroundColor: '#ffffff'
+  });
+  ```
+</ParamField>
+
+## Exporting to PNG
+
+Convert your ASCII art to PNG format for use in documents, presentations, or social media.
+
+### Basic PNG Export
+
+<CodeGroup>
+```svelte Data URL
+<script lang="ts">
+  import { AsciiArt, exportSvgToPng } from 'svelte-asciiart';
+  
+  let svg = $state<SVGSVGElement>();
+  let pngUrl = $state<string | null>(null);
+  
+  async function generatePng() {
+    if (!svg) return;
+    pngUrl = await exportSvgToPng(svg, {
+      includeBackground: true,
+      backgroundColor: '#ffffff'
+    });
+  }
+</script>
+
+<AsciiArt bind:svg text={art} />
+
+{#if svg}
+  <button onclick={generatePng}>Generate PNG</button>
+{/if}
+
+{#if pngUrl}
+  <img src={pngUrl} alt="ASCII art" />
+{/if}
+```
+
+```svelte Blob Output
+<script lang="ts">
+  import { AsciiArt, exportSvgToPng } from 'svelte-asciiart';
+  
+  let svg = $state<SVGSVGElement>();
+  
+  async function copyPng() {
+    if (!svg) return;
+    const blob = await exportSvgToPng(svg, {
+      includeBackground: true,
+      backgroundColor: '#ffffff',
+      output: 'blob'
+    });
+    await navigator.clipboard.write([
+      new ClipboardItem({ 'image/png': blob })
+    ]);
+  }
+</script>
+
+<AsciiArt bind:svg text={art} />
+
+{#if svg}
+  <button onclick={copyPng}>Copy PNG</button>
+{/if}
+```
+</CodeGroup>
+
+### PNG Export Options
+
+<ParamField path="scale" type="number" default="1">
+  Resolution multiplier. Higher values produce larger, higher-quality images.
+  
+  ```typescript
+  // Standard resolution
+  await exportSvgToPng(svg, { scale: 1 });
+  
+  // High resolution (2x)
+  await exportSvgToPng(svg, { scale: 2 });
+  
+  // Very high resolution (4x)
+  await exportSvgToPng(svg, { scale: 4 });
+  ```
+</ParamField>
+
+<ParamField path="output" type="'dataUrl' | 'blob'" default="'dataUrl'">
+  Output format:
+  - `'dataUrl'`: Returns a base64 data URL string
+  - `'blob'`: Returns a `Blob` object
+  
+  ```typescript
+  // For display in <img> tag
+  const url = await exportSvgToPng(svg, { output: 'dataUrl' });
+  
+  // For clipboard or download
+  const blob = await exportSvgToPng(svg, { output: 'blob' });
+  ```
+</ParamField>
+
+## Complete Export Example
+
+Here's a full example with multiple export options, based on the source (+page.svelte:393-449):
+
+<CodeGroup>
+```svelte Component
+<script lang="ts">
+  import { AsciiArt, exportSvg, exportSvgToPng } from 'svelte-asciiart';
+  
+  let svg = $state<SVGSVGElement>();
+  let copiedSvg = $state(false);
+  let copiedPng = $state(false);
+  
+  const art = `
+  ╔════════════╗
+  ║   Export   ║
+  ║    Demo    ║
+  ╚════════════╝
+  `.trim();
+  
+  async function copySvgRaw() {
+    if (!svg) return;
+    const markup = svg.outerHTML;
+    await navigator.clipboard.writeText(markup);
+    copiedSvg = true;
+    setTimeout(() => copiedSvg = false, 2000);
+  }
+  
+  async function copySvgStyled() {
+    if (!svg) return;
+    const markup = exportSvg(svg, {
+      includeBackground: true,
+      backgroundColor: '#f3f4f6'
+    });
+    await navigator.clipboard.writeText(markup);
+    copiedSvg = true;
+    setTimeout(() => copiedSvg = false, 2000);
+  }
+  
+  async function copyPng() {
+    if (!svg) return;
+    const blob = await exportSvgToPng(svg, {
+      includeBackground: true,
+      backgroundColor: '#f3f4f6',
+      scale: 2,
+      output: 'blob'
+    });
+    await navigator.clipboard.write([
+      new ClipboardItem({ 'image/png': blob })
+    ]);
+    copiedPng = true;
+    setTimeout(() => copiedPng = false, 2000);
+  }
+  
+  function downloadSvg() {
+    if (!svg) return;
+    const markup = exportSvg(svg, {
+      includeBackground: true,
+      backgroundColor: '#ffffff'
+    });
+    const blob = new Blob([markup], { type: 'image/svg+xml' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'ascii-art.svg';
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+  
+  async function downloadPng() {
+    if (!svg) return;
+    const dataUrl = await exportSvgToPng(svg, {
+      includeBackground: true,
+      backgroundColor: '#ffffff',
+      scale: 2
+    });
+    const a = document.createElement('a');
+    a.href = dataUrl;
+    a.download = 'ascii-art.png';
+    a.click();
+  }
+</script>
+
+<div class="space-y-4">
+  <AsciiArt bind:svg text={art} frame margin={1} />
+  
+  {#if svg}
+    <div class="flex gap-2">
+      <button onclick={copySvgRaw}>
+        {copiedSvg ? '✓ Copied!' : 'Copy SVG'}
+      </button>
+      <button onclick={copySvgStyled}>
+        Copy SVG + Styles
+      </button>
+      <button onclick={copyPng}>
+        {copiedPng ? '✓ Copied!' : 'Copy PNG'}
+      </button>
+      <button onclick={downloadSvg}>
+        Download SVG
+      </button>
+      <button onclick={downloadPng}>
+        Download PNG
+      </button>
+    </div>
+  {/if}
+</div>
+```
+</CodeGroup>
+
+## Advanced: High-Resolution Exports
+
+For high-quality exports, combine `baseSize` and `scale`:
+
+```svelte
+<script lang="ts">
+  import { AsciiArt, exportSvgToPng } from 'svelte-asciiart';
+  
+  let svg = $state<SVGSVGElement>();
+  
+  async function exportHighRes() {
+    if (!svg) return;
+    const blob = await exportSvgToPng(svg, {
+      scale: 4, // 4x resolution
+      includeBackground: true,
+      backgroundColor: '#ffffff',
+      output: 'blob'
+    });
+    
+    // Download the high-res PNG
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'ascii-art-4x.png';
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+</script>
+
+<AsciiArt
+  bind:svg
+  text={art}
+  baseSize={100}
+/>
+
+{#if svg}
+  <button onclick={exportHighRes}>Export 4K</button>
+{/if}
+```
+
+<Warning>
+Very high scale values (>4) may cause performance issues or browser memory errors.
+</Warning>
+
+## Implementation Details
+
+### Style Extraction
+
+From utils.ts:17-54, the export function extracts computed styles:
+
+```typescript
+function extractClassStyles(svgEl: SVGSVGElement): string {
+  const styleRules: string[] = [];
+  const processedClasses = new Set<string>();
+  
+  const elementsWithClasses = svgEl.querySelectorAll('[class]');
+  
+  elementsWithClasses.forEach((el) => {
+    const classAttr = el.getAttribute('class')!;
+    const classes = classAttr.split(/\s+/).filter(Boolean);
+    
+    classes.forEach((className) => {
+      if (processedClasses.has(className)) return;
+      processedClasses.add(className);
+      
+      const computed = getComputedStyle(el);
+      const declarations: string[] = [];
+      
+      SVG_STYLE_PROPS.forEach((prop) => {
+        const value = computed.getPropertyValue(prop);
+        if (!value || (value === 'none' && prop !== 'fill')) return;
+        declarations.push(`${prop}: ${value}`);
+      });
+      
+      if (declarations.length) {
+        styleRules.push(`.${className} { ${declarations.join('; ')} }`);
+      }
+    });
+  });
+  
+  return styleRules.join('\n');
+}
+```
+
+This ensures all CSS styles are embedded in the exported SVG.
+
+### PNG Conversion
+
+From utils.ts:142-199, PNG conversion uses Canvas API:
+
+```typescript
+export async function svgStringToPng(
+  svgString: string,
+  options: SvgStringToPngOptions = {}
+): Promise<string | Blob> {
+  const { scale = 1, output = 'dataUrl' } = options;
+  
+  const img = new Image();
+  const svgBlob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
+  const url = URL.createObjectURL(svgBlob);
+  
+  return new Promise((resolve, reject) => {
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      
+      const width = Math.round(img.naturalWidth * scale);
+      const height = Math.round(img.naturalHeight * scale);
+      
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      
+      ctx.drawImage(img, 0, 0, width, height);
+      
+      if (output === 'blob') {
+        canvas.toBlob((blob) => resolve(blob!), 'image/png');
+      } else {
+        resolve(canvas.toDataURL('image/png'));
+      }
+    };
+    img.src = url;
+  });
+}
+```
+
+## Export Patterns
+
+<Steps>
+  <Step title="Bind SVG element">
+    Use `bind:svg` to get reference to the rendered SVG
+  </Step>
+  <Step title="Wait for mount">
+    Check that `svg` is defined before exporting
+  </Step>
+  <Step title="Call export function">
+    Use `exportSvg()` or `exportSvgToPng()` with your options
+  </Step>
+  <Step title="Handle output">
+    Copy to clipboard, download, or display the result
+  </Step>
+</Steps>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Component Props" icon="sliders" href="/guides/props">
+    Learn about all available props
+  </Card>
+  <Card title="Custom Fonts" icon="font" href="/guides/custom-fonts">
+    Customize fonts for better exports
+  </Card>
+</CardGroup>

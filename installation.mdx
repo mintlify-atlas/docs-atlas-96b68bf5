@@ -1,0 +1,174 @@
+---
+title: Installation
+description: Install Svelte ASCII Art in your Svelte 5 project
+---
+
+## Requirements
+
+Before installing Svelte ASCII Art, ensure your project meets these requirements:
+
+<Note>
+**Svelte 5.0.0 or higher** is required. This package uses Svelte 5's new component architecture and will not work with Svelte 4 or earlier versions.
+</Note>
+
+- Node.js 16.0 or higher
+- A Svelte 5 project (SvelteKit or Vite + Svelte)
+
+## Package manager installation
+
+Install `svelte-asciiart` using your preferred package manager:
+
+<CodeGroup>
+```bash npm
+npm install svelte-asciiart
+```
+
+```bash yarn
+yarn add svelte-asciiart
+```
+
+```bash pnpm
+pnpm add svelte-asciiart
+```
+
+```bash bun
+bun add svelte-asciiart
+```
+</CodeGroup>
+
+The package will be added to your `dependencies` in `package.json`:
+
+```json package.json
+{
+  "dependencies": {
+    "svelte": "^5.0.0",
+    "svelte-asciiart": "^0.0.5"
+  }
+}
+```
+
+## Verify installation
+
+After installation, verify the package is installed correctly by checking your `node_modules`:
+
+```bash
+ls node_modules/svelte-asciiart
+```
+
+You should see the package directory with `dist/` containing the compiled component.
+
+## Import in your project
+
+Import the component and export utilities in your Svelte files:
+
+```svelte
+<script>
+  import { AsciiArt } from 'svelte-asciiart';
+</script>
+```
+
+For export functionality, import the utility functions:
+
+```svelte
+<script>
+  import { AsciiArt, exportSvg, exportSvgToPng } from 'svelte-asciiart';
+</script>
+```
+
+## TypeScript support
+
+Svelte ASCII Art includes full TypeScript type definitions. No additional `@types` package is needed.
+
+The package exports these types:
+
+```typescript
+import type {
+  ExportSvgOptions,
+  ExportPngOptions,
+  SvgStringToPngOptions
+} from 'svelte-asciiart';
+```
+
+TypeScript will automatically pick up the types when you import from `svelte-asciiart`.
+
+## Project structure
+
+After installation, your typical project structure might look like:
+
+```
+my-svelte-app/
+├── src/
+│   ├── routes/
+│   │   └── +page.svelte          # Your page using AsciiArt
+│   └── app.html
+├── package.json
+└── svelte.config.js
+```
+
+## SvelteKit configuration
+
+No special configuration is needed for SvelteKit projects. The package works out of the box with SvelteKit's default settings.
+
+If you're using SvelteKit with SSR (server-side rendering), the component will work correctly as it doesn't rely on browser-specific APIs during rendering. The export functions (`exportSvg`, `exportSvgToPng`) should only be called client-side, as they use browser APIs like `getComputedStyle` and Canvas.
+
+<Warning>
+Export functions require a browser environment. Always call them within client-side event handlers or wrap them in `if (typeof window !== 'undefined')` checks if running in SSR contexts.
+</Warning>
+
+## Vite configuration
+
+For Vite + Svelte projects (without SvelteKit), ensure you have the Svelte plugin configured:
+
+```javascript vite.config.js
+import { defineConfig } from 'vite';
+import { svelte } from '@sveltejs/vite-plugin-svelte';
+
+export default defineConfig({
+  plugins: [svelte()]
+});
+```
+
+No additional configuration is needed for `svelte-asciiart`.
+
+## Troubleshooting
+
+### Module not found error
+
+If you see an error like `Cannot find module 'svelte-asciiart'`:
+
+1. Ensure the package is installed: run your package manager's install command again
+2. Restart your development server
+3. Clear your build cache: `rm -rf .svelte-kit` (SvelteKit) or `rm -rf dist` (Vite)
+
+### Type errors
+
+If you see TypeScript errors when importing:
+
+1. Ensure you're using Svelte 5.0.0 or higher: check your `package.json`
+2. Update your `svelte-check` if using SvelteKit: `npm install -D svelte-check@latest`
+3. Restart your TypeScript language server in your editor
+
+### Peer dependency warnings
+
+If you see peer dependency warnings about Svelte:
+
+```
+npm WARN EPENDENCIES svelte-asciiart@0.0.5 requires a peer of svelte@^5.0.0
+```
+
+This means your project is using Svelte 4 or earlier. You'll need to upgrade to Svelte 5:
+
+<Tip>
+See the [Svelte 5 migration guide](https://svelte.dev/docs/svelte/v5-migration-guide) for upgrading from Svelte 4.
+</Tip>
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Quickstart" icon="rocket" href="/quickstart">
+    Create your first ASCII art SVG
+  </Card>
+  <Card title="Component props" icon="sliders" href="/guides/props">
+    Learn about all available props
+  </Card>
+</CardGroup>

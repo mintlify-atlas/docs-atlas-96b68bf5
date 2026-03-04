@@ -1,0 +1,266 @@
+---
+title: "Export Functions"
+description: "API reference for SVG and PNG export functions with all parameters and options"
+---
+
+## exportSvg
+
+Export an SVG element with all computed styles embedded as a `<style>` block. The SVG must be mounted in the DOM for `getComputedStyle` to work.
+
+```typescript
+function exportSvg(
+  svgEl: SVGSVGElement,
+  options?: ExportSvgOptions
+): string
+```
+
+### Parameters
+
+<ParamField path="svgEl" type="SVGSVGElement" required>
+  The SVG element to export. Must be mounted in the DOM.
+</ParamField>
+
+<ParamField path="options" type="ExportSvgOptions">
+  Configuration options for the export.
+  
+  <ParamField path="includeBackground" type="boolean" default="false">
+    Whether to include a background color rectangle in the exported SVG.
+  </ParamField>
+  
+  <ParamField path="backgroundColor" type="string">
+    Background color to use if `includeBackground` is true. Can be any valid CSS color value.
+  </ParamField>
+</ParamField>
+
+### Returns
+
+<ResponseField name="string" type="string">
+  The serialized SVG string with embedded styles, ready to save as a `.svg` file or pass to other functions.
+</ResponseField>
+
+### Example
+
+```svelte
+<script>
+  import { AsciiArt, exportSvg } from 'svelte-asciiart';
+  
+  let svg = $state();
+  
+  function handleExport() {
+    const svgString = exportSvg(svg, {
+      includeBackground: true,
+      backgroundColor: '#ffffff'
+    });
+    
+    // Download the SVG
+    const blob = new Blob([svgString], { type: 'image/svg+xml' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'ascii-art.svg';
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+</script>
+
+<AsciiArt text="..." bind:svg />
+<button onclick={handleExport}>Export SVG</button>
+```
+
+---
+
+## exportSvgToPng
+
+Export an SVG element to PNG format. Returns a data URL or Blob depending on options.
+
+### Function Overloads
+
+```typescript
+// Returns a Blob
+function exportSvgToPng(
+  svgEl: SVGSVGElement,
+  options: ExportPngOptions & { output: 'blob' }
+): Promise<Blob>
+
+// Returns a data URL string
+function exportSvgToPng(
+  svgEl: SVGSVGElement,
+  options?: ExportPngOptions
+): Promise<string>
+```
+
+### Parameters
+
+<ParamField path="svgEl" type="SVGSVGElement" required>
+  The SVG element to export. Must be mounted in the DOM.
+</ParamField>
+
+<ParamField path="options" type="ExportPngOptions">
+  Configuration options for the PNG export.
+  
+  <ParamField path="scale" type="number" default="1">
+    Scale factor for the PNG output. Use values > 1 for higher resolution exports.
+  </ParamField>
+  
+  <ParamField path="output" type="'dataUrl' | 'blob'" default="'dataUrl'">
+    Output format:
+    - `'dataUrl'` - Returns a base64-encoded data URL string
+    - `'blob'` - Returns a Blob object for direct file operations
+  </ParamField>
+  
+  <ParamField path="includeBackground" type="boolean" default="false">
+    Whether to include a background color in the exported PNG.
+  </ParamField>
+  
+  <ParamField path="backgroundColor" type="string">
+    Background color to use if `includeBackground` is true.
+  </ParamField>
+</ParamField>
+
+### Returns
+
+<ResponseField name="Promise<string>" type="Promise<string>">
+  When `output` is `'dataUrl'` (default), returns a Promise that resolves to a base64-encoded PNG data URL.
+</ResponseField>
+
+<ResponseField name="Promise<Blob>" type="Promise<Blob>">
+  When `output` is `'blob'`, returns a Promise that resolves to a Blob containing the PNG image data.
+</ResponseField>
+
+### Example
+
+```svelte
+<script>
+  import { AsciiArt, exportSvgToPng } from 'svelte-asciiart';
+  
+  let svg = $state();
+  
+  async function handleExportPng() {
+    // Export as data URL
+    const dataUrl = await exportSvgToPng(svg, {
+      scale: 2,
+      includeBackground: true,
+      backgroundColor: '#ffffff'
+    });
+    
+    // Download the PNG
+    const a = document.createElement('a');
+    a.href = dataUrl;
+    a.download = 'ascii-art.png';
+    a.click();
+  }
+  
+  async function handleExportPngBlob() {
+    // Export as Blob
+    const blob = await exportSvgToPng(svg, {
+      output: 'blob',
+      scale: 3
+    });
+    
+    // Use the blob
+    const url = URL.createObjectURL(blob);
+    // ... use the URL
+    URL.revokeObjectURL(url);
+  }
+</script>
+
+<AsciiArt text="..." bind:svg />
+<button onclick={handleExportPng}>Export PNG (2x)</button>
+<button onclick={handleExportPngBlob}>Export PNG Blob (3x)</button>
+```
+
+---
+
+## svgStringToPng
+
+Convert an SVG string to PNG format. Uses the browser's computed dimensions from the loaded image.
+
+### Function Overloads
+
+```typescript
+// Returns a Blob
+function svgStringToPng(
+  svgString: string,
+  options: SvgStringToPngOptions & { output: 'blob' }
+): Promise<Blob>
+
+// Returns a data URL string
+function svgStringToPng(
+  svgString: string,
+  options?: SvgStringToPngOptions
+): Promise<string>
+```
+
+### Parameters
+
+<ParamField path="svgString" type="string" required>
+  The SVG markup string to convert to PNG.
+</ParamField>
+
+<ParamField path="options" type="SvgStringToPngOptions">
+  Configuration options for the PNG conversion.
+  
+  <ParamField path="scale" type="number" default="1">
+    Scale factor for the PNG output. Use values > 1 for higher resolution.
+  </ParamField>
+  
+  <ParamField path="output" type="'dataUrl' | 'blob'" default="'dataUrl'">
+    Output format:
+    - `'dataUrl'` - Returns a base64-encoded data URL string
+    - `'blob'` - Returns a Blob object
+  </ParamField>
+</ParamField>
+
+### Returns
+
+<ResponseField name="Promise<string>" type="Promise<string>">
+  When `output` is `'dataUrl'` (default), returns a Promise that resolves to a base64-encoded PNG data URL.
+</ResponseField>
+
+<ResponseField name="Promise<Blob>" type="Promise<Blob>">
+  When `output` is `'blob'`, returns a Promise that resolves to a Blob containing the PNG image data.
+</ResponseField>
+
+### Example
+
+```svelte
+<script>
+  import { exportSvg, svgStringToPng } from 'svelte-asciiart';
+  
+  let svg = $state();
+  
+  async function handleExport() {
+    // First export the SVG to a string
+    const svgString = exportSvg(svg);
+    
+    // Then convert to PNG
+    const pngDataUrl = await svgStringToPng(svgString, {
+      scale: 2
+    });
+    
+    // Use the data URL
+    console.log(pngDataUrl);
+  }
+  
+  async function exportExternalSvg() {
+    const response = await fetch('/path/to/file.svg');
+    const svgString = await response.text();
+    
+    const pngBlob = await svgStringToPng(svgString, {
+      output: 'blob',
+      scale: 4
+    });
+    
+    // Use the blob
+    const url = URL.createObjectURL(pngBlob);
+    // ...
+    URL.revokeObjectURL(url);
+  }
+</script>
+```
+
+### Notes
+
+- The SVG string must have proper `width` and `height` attributes or a `viewBox` for dimensions to be computed correctly.
+- If the SVG has zero dimensions, the function will reject with an error.
+- This function creates a temporary Image element to load the SVG, then renders it to a canvas for PNG conversion.

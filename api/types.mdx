@@ -1,0 +1,218 @@
+---
+title: "TypeScript Types"
+description: "TypeScript interfaces and type definitions for svelte-asciiart"
+---
+
+## Component Types
+
+### Margin
+
+Type definition for the `margin` prop of the AsciiArt component.
+
+```typescript
+type Margin = 
+  | number 
+  | [number, number] 
+  | [number, number, number, number]
+```
+
+Defines margin around the frame in character units:
+
+- `number` - Same margin on all sides
+- `[vertical, horizontal]` - Top/bottom and left/right margins
+- `[top, right, bottom, left]` - Individual side margins (CSS-style)
+
+#### Examples
+
+```typescript
+// All sides
+margin={1}
+
+// Vertical and horizontal
+margin={[1, 2]}  // 1 top/bottom, 2 left/right
+
+// Individual sides
+margin={[1, 2, 3, 4]}  // top, right, bottom, left
+```
+
+---
+
+## Export Types
+
+### ExportSvgOptions
+
+Options for the `exportSvg` function.
+
+```typescript
+interface ExportSvgOptions {
+  /** Include background color as a rect. Default: false */
+  includeBackground?: boolean;
+  
+  /** Background color to use if includeBackground is true */
+  backgroundColor?: string;
+}
+```
+
+<ResponseField name="includeBackground" type="boolean" default="false">
+  Whether to add a background rectangle to the exported SVG.
+</ResponseField>
+
+<ResponseField name="backgroundColor" type="string">
+  The background color to use when `includeBackground` is true. Accepts any valid CSS color value (hex, rgb, named colors, etc.).
+</ResponseField>
+
+---
+
+### ExportPngOptions
+
+Options for the `exportSvgToPng` function. Extends `ExportSvgOptions` with PNG-specific options.
+
+```typescript
+interface ExportPngOptions extends ExportSvgOptions {
+  /** Scale factor for the PNG. Default: 1 */
+  scale?: number;
+  
+  /** Output format. Default: 'dataUrl' */
+  output?: 'dataUrl' | 'blob';
+}
+```
+
+<ResponseField name="scale" type="number" default="1">
+  Scale multiplier for the output PNG resolution. Use values greater than 1 for higher resolution exports (e.g., `2` for 2x, `3` for 3x).
+</ResponseField>
+
+<ResponseField name="output" type="'dataUrl' | 'blob'" default="'dataUrl'">
+  The output format for the PNG:
+  - `'dataUrl'` - Returns a base64-encoded data URL string (easier for immediate display or download)
+  - `'blob'` - Returns a Blob object (better for file operations and memory efficiency)
+</ResponseField>
+
+<ResponseField name="includeBackground" type="boolean" default="false">
+  Inherited from `ExportSvgOptions`. Whether to include a background color in the PNG.
+</ResponseField>
+
+<ResponseField name="backgroundColor" type="string">
+  Inherited from `ExportSvgOptions`. Background color when `includeBackground` is true.
+</ResponseField>
+
+---
+
+### SvgStringToPngOptions
+
+Options for the `svgStringToPng` function.
+
+```typescript
+interface SvgStringToPngOptions {
+  /** Scale factor for the PNG. Default: 1 */
+  scale?: number;
+  
+  /** Output format. Default: 'dataUrl' */
+  output?: 'dataUrl' | 'blob';
+}
+```
+
+<ResponseField name="scale" type="number" default="1">
+  Scale multiplier for the output PNG resolution.
+</ResponseField>
+
+<ResponseField name="output" type="'dataUrl' | 'blob'" default="'dataUrl'">
+  The output format:
+  - `'dataUrl'` - Returns a base64-encoded data URL string
+  - `'blob'` - Returns a Blob object
+</ResponseField>
+
+---
+
+## Svelte Types
+
+The AsciiArt component extends standard Svelte SVG element types:
+
+### SVGAttributes
+
+The component accepts all properties from Svelte's `SVGAttributes<SVGSVGElement>` type, which includes:
+
+- Standard HTML attributes (`id`, `class`, `style`, etc.)
+- SVG-specific attributes
+- ARIA attributes for accessibility
+- Event handlers (`onclick`, `onmouseenter`, etc.)
+
+```svelte
+<AsciiArt 
+  text={art}
+  class="my-svg"
+  id="ascii-art-1"
+  aria-label="ASCII art diagram"
+  onclick={() => console.log('clicked')}
+  style="border: 1px solid black;"
+/>
+```
+
+---
+
+## Usage Examples
+
+### Type-safe component usage
+
+```svelte
+<script lang="ts">
+  import { AsciiArt, exportSvgToPng } from 'svelte-asciiart';
+  import type { ExportPngOptions } from 'svelte-asciiart';
+  
+  let svg = $state<SVGSVGElement>();
+  
+  const exportOptions: ExportPngOptions = {
+    scale: 2,
+    output: 'dataUrl',
+    includeBackground: true,
+    backgroundColor: '#ffffff'
+  };
+  
+  async function handleExport() {
+    if (!svg) return;
+    const dataUrl = await exportSvgToPng(svg, exportOptions);
+    console.log(dataUrl);
+  }
+</script>
+
+<AsciiArt 
+  text="Hello"
+  bind:svg
+  margin={[1, 2]}
+  cellAspect={0.6}
+/>
+```
+
+### Type-safe export functions
+
+```typescript
+import { exportSvg, svgStringToPng } from 'svelte-asciiart';
+import type { 
+  ExportSvgOptions, 
+  ExportPngOptions,
+  SvgStringToPngOptions 
+} from 'svelte-asciiart';
+
+// Type-safe SVG export
+const svgOptions: ExportSvgOptions = {
+  includeBackground: true,
+  backgroundColor: 'white'
+};
+
+const svgString = exportSvg(svgElement, svgOptions);
+
+// Type-safe PNG export with overload
+const pngOptions: ExportPngOptions & { output: 'blob' } = {
+  scale: 3,
+  output: 'blob'
+};
+
+const blob: Blob = await exportSvgToPng(svgElement, pngOptions);
+
+// Type-safe string to PNG conversion
+const conversionOptions: SvgStringToPngOptions = {
+  scale: 2,
+  output: 'dataUrl'
+};
+
+const dataUrl: string = await svgStringToPng(svgString, conversionOptions);
+```

@@ -1,0 +1,139 @@
+---
+title: Introduction
+description: Welcome to Svelte ASCII Art - transform ASCII art into beautiful, scalable SVG graphics
+---
+
+## What is Svelte ASCII Art?
+
+Svelte ASCII Art is a Svelte 5 component that renders ASCII art as scalable SVG graphics. It preserves the monospace character grid while providing modern web capabilities like infinite scaling, custom styling, and export functionality.
+
+<Note>
+Requires Svelte 5.0.0 or higher. The package is built specifically for Svelte 5's new component architecture.
+</Note>
+
+## Why use Svelte ASCII Art?
+
+ASCII art has been a beloved form of expression since the early days of computing, but displaying it on the web comes with challenges. Svelte ASCII Art solves these problems:
+
+<CardGroup cols={2}>
+  <Card title="Scalable output" icon="up-right-and-down-left-from-center">
+    Your ASCII art renders as SVG, which means it scales perfectly at any size without pixelation
+  </Card>
+  <Card title="Precise alignment" icon="grid-2">
+    Optional grid overlays ensure perfect character alignment for complex diagrams
+  </Card>
+  <Card title="Flexible styling" icon="palette">
+    Apply custom colors, strokes, backgrounds, and fonts using standard CSS
+  </Card>
+  <Card title="Export ready" icon="file-export">
+    Export your rendered ASCII art as standalone SVG or high-resolution PNG
+  </Card>
+</CardGroup>
+
+## Key features
+
+### SVG rendering
+
+The component renders each character as an SVG `<tspan>` element positioned on a precise coordinate grid. The result is:
+
+- Infinitely scalable without quality loss
+- Sharp rendering at any resolution
+- Support for custom fonts via CSS
+- Efficient DOM structure using grouped text elements
+
+### Grid mode
+
+Enable grid overlays to visualize the character grid:
+
+```svelte
+<AsciiArt {text} grid gridClass="ascii-grid" />
+```
+
+Perfect for:
+- Debugging alignment issues
+- Creating technical diagrams
+- Educational purposes
+- Pixel art style graphics
+
+### Frame and margin control
+
+Define a frame area with configurable margins:
+
+```svelte
+<AsciiArt {text} frame margin={[1, 2]} frameClass="ascii-frame" />
+```
+
+The margin system uses grid cells as units, making it intuitive to work with character-based layouts.
+
+### Export functionality
+
+Export your ASCII art with embedded styles:
+
+```typescript
+import { exportSvg, exportSvgToPng } from 'svelte-asciiart';
+
+// Export as standalone SVG
+const svgMarkup = exportSvg(svgElement, {
+  includeBackground: true,
+  backgroundColor: '#f3f4f6'
+});
+
+// Export as PNG with 2x resolution
+const pngDataUrl = await exportSvgToPng(svgElement, {
+  includeBackground: true,
+  backgroundColor: '#f3f4f6',
+  scale: 2
+});
+```
+
+The export functions extract computed CSS styles and embed them directly in the SVG, making the output portable and self-contained.
+
+## Use cases
+
+Svelte ASCII Art is ideal for:
+
+<Accordion title="Technical documentation">
+Display code structure, architecture diagrams, or protocol flows in a readable, text-based format that's version-control friendly
+</Accordion>
+
+<Accordion title="Retro graphics">
+Create pixel art, game sprites, or retro-style logos with the aesthetic of ASCII art combined with modern web capabilities
+</Accordion>
+
+<Accordion title="Educational content">
+Teach concepts related to coordinate systems, grids, or character encoding with interactive, visible grid overlays
+</Accordion>
+
+<Accordion title="Terminal output visualization">
+Display terminal commands, logs, or CLI tool output in a styled, shareable format
+</Accordion>
+
+## Browser support
+
+Svelte ASCII Art works in all modern browsers that support:
+- SVG 1.1
+- CSS custom properties (CSS variables)
+- Modern JavaScript (ES2020+)
+
+For PNG export functionality, the browser must support the Canvas API.
+
+## License
+
+Svelte ASCII Art is [MIT licensed](https://github.com/xl0/svelte-asciiart/blob/main/LICENSE).
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Installation" icon="download" href="/installation">
+    Install the package and set up your project
+  </Card>
+  <Card title="Quickstart" icon="rocket" href="/quickstart">
+    Build your first ASCII art SVG in minutes
+  </Card>
+  <Card title="Core concepts" icon="book" href="/concepts/ascii-component">
+    Learn how the component works under the hood
+  </Card>
+  <Card title="API reference" icon="code" href="/api/asciiart-component">
+    Explore the complete API documentation
+  </Card>
+</CardGroup>

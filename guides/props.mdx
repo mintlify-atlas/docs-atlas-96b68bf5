@@ -1,0 +1,261 @@
+---
+title: Component Props
+description: Complete reference for all AsciiArt component props
+---
+
+The `AsciiArt` component accepts several props to control the rendering of your ASCII art. All props are optional except `text`.
+
+## Core Props
+
+<ParamField path="text" type="string" required>
+  The ASCII art text to render. Multiline strings are split by newlines (`\n`).
+  
+  ```svelte
+  <AsciiArt text={`Hello\nWorld!`} />
+  ```
+</ParamField>
+
+<ParamField path="rows" type="number">
+  Number of rows in the canvas frame. If omitted, automatically fits content height.
+  
+  The frame defines the visible area - content can overflow into margins.
+  
+  ```svelte
+  <AsciiArt text={art} rows={10} />
+  ```
+</ParamField>
+
+<ParamField path="cols" type="number">
+  Number of columns in the canvas frame. If omitted, automatically fits content width.
+  
+  ```svelte
+  <AsciiArt text={art} cols={40} />
+  ```
+</ParamField>
+
+## Visual Props
+
+<ParamField path="grid" type="boolean" default="false">
+  Show a grid overlay for character positioning.
+  
+  ```svelte
+  <AsciiArt text={art} grid gridClass="my-grid" />
+  ```
+</ParamField>
+
+<ParamField path="gridClass" type="string" default="''">
+  CSS class applied to the grid path element.
+  
+  Use this to style the grid with CSS:
+  
+  ```svelte
+  <AsciiArt text={art} grid gridClass="ascii-grid" />
+  
+  <style>
+    :global(.ascii-grid) {
+      stroke: #87CEFA;
+      stroke-width: 0.03;
+      opacity: 0.5;
+    }
+  </style>
+  ```
+</ParamField>
+
+<ParamField path="frame" type="boolean" default="false">
+  Show a rectangular frame around the content area.
+  
+  ```svelte
+  <AsciiArt text={art} frame frameClass="my-frame" />
+  ```
+</ParamField>
+
+<ParamField path="frameClass" type="string" default="''">
+  CSS class applied to the frame rect element.
+  
+  ```svelte
+  <AsciiArt text={art} frame frameClass="ascii-frame" />
+  
+  <style>
+    :global(.ascii-frame) {
+      stroke: #FFB366;
+      stroke-width: 0.05;
+    }
+  </style>
+  ```
+</ParamField>
+
+<ParamField path="margin" type="number | [number, number] | [number, number, number, number]" default="0">
+  Margin around the frame, specified in character cell units.
+  
+  Follows CSS margin syntax:
+  - Single number: all sides
+  - Two numbers: `[top/bottom, left/right]`
+  - Four numbers: `[top, right, bottom, left]`
+  
+  ```svelte
+  <!-- 1 cell margin on all sides -->
+  <AsciiArt text={art} margin={1} />
+  
+  <!-- 1 cell top/bottom, 2 cells left/right -->
+  <AsciiArt text={art} margin={[1, 2]} />
+  
+  <!-- Individual margins -->
+  <AsciiArt text={art} margin={[1, 2, 1, 2]} />
+  ```
+</ParamField>
+
+## Layout Props
+
+<ParamField path="cellAspect" type="number" default="0.6">
+  Width-to-height ratio for monospace characters.
+  
+  The default `0.6` works well for most monospace fonts. Adjust if characters appear stretched:
+  
+  ```svelte
+  <!-- Make cells wider -->
+  <AsciiArt text={art} cellAspect={0.7} />
+  
+  <!-- Make cells narrower -->
+  <AsciiArt text={art} cellAspect={0.5} />
+  ```
+</ParamField>
+
+<ParamField path="baseSize" type="number" default="50">
+  Pixels per viewBox unit for intrinsic size calculation.
+  
+  This affects the exported SVG dimensions but not the rendered display size (which is controlled by CSS). Increase for higher resolution exports:
+  
+  ```svelte
+  <!-- Standard resolution -->
+  <AsciiArt text={art} baseSize={50} />
+  
+  <!-- High resolution for exports -->
+  <AsciiArt text={art} baseSize={100} />
+  ```
+</ParamField>
+
+## Binding Props
+
+<ParamField path="svg" type="SVGSVGElement | null" bindable>
+  Bind to the underlying SVG element for programmatic access.
+  
+  <Tip>Required for using export functions like `exportSvg()` and `exportSvgToPng()`.</Tip>
+  
+  ```svelte
+  <script>
+    import { AsciiArt, exportSvg } from 'svelte-asciiart';
+    let svg = $state<SVGSVGElement>();
+  </script>
+  
+  <AsciiArt bind:svg text={art} />
+  
+  {#if svg}
+    <button onclick={() => console.log(exportSvg(svg))}>Export</button>
+  {/if}
+  ```
+</ParamField>
+
+## SVG Attributes
+
+The component extends `SVGAttributes<SVGSVGElement>`, so you can pass any valid SVG attributes:
+
+```svelte
+<AsciiArt
+  text={art}
+  class="my-ascii"
+  id="ascii-1"
+  aria-label="ASCII art diagram"
+  style="border: 1px solid #ccc;"
+/>
+```
+
+## Props in Action
+
+Here's a complete example using multiple props:
+
+<CodeGroup>
+```svelte Component
+<script lang="ts">
+  import { AsciiArt } from 'svelte-asciiart';
+  
+  const diagram = `
+    ┌─────────┐
+    │ Server  │
+    └────┬────┘
+         │
+    ┌────▼────┐
+    │ Client  │
+    └─────────┘
+  `;
+</script>
+
+<AsciiArt
+  text={diagram}
+  rows={7}
+  cols={15}
+  cellAspect={0.6}
+  grid
+  frame
+  margin={[1, 2]}
+  gridClass="grid"
+  frameClass="frame"
+  class="diagram"
+/>
+
+<style>
+  :global(.diagram) {
+    font-family: 'Fira Code', monospace;
+  }
+  :global(.grid) {
+    stroke: #e0e0e0;
+    stroke-width: 0.02;
+    opacity: 0.3;
+  }
+  :global(.frame) {
+    stroke: #4a90e2;
+    stroke-width: 0.05;
+  }
+</style>
+```
+
+```svelte With Binding
+<script lang="ts">
+  import { AsciiArt, exportSvg } from 'svelte-asciiart';
+  
+  let svg = $state<SVGSVGElement>();
+  const art = `ASCII Art`;
+  
+  async function handleExport() {
+    if (!svg) return;
+    const markup = exportSvg(svg, {
+      includeBackground: true,
+      backgroundColor: '#ffffff'
+    });
+    await navigator.clipboard.writeText(markup);
+  }
+</script>
+
+<AsciiArt
+  bind:svg
+  text={art}
+  frame
+  margin={1}
+  frameClass="export-frame"
+/>
+
+{#if svg}
+  <button onclick={handleExport}>Copy SVG</button>
+{/if}
+```
+</CodeGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Margins & Frames" icon="frame" href="/guides/margins-and-frames">
+    Learn how to use margins and frames effectively
+  </Card>
+  <Card title="Custom Fonts" icon="font" href="/guides/custom-fonts">
+    Configure custom monospace fonts
+  </Card>
+</CardGroup>

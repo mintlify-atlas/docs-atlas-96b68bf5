@@ -1,0 +1,466 @@
+---
+title: 'Export Workflows'
+description: 'Complete workflows for exporting ASCII art as SVG and PNG'
+---
+
+## Overview
+
+svelte-asciiart provides two export functions for different use cases:
+
+- `exportSvg()` - Export SVG with embedded styles
+- `exportSvgToPng()` - Convert SVG to PNG format
+
+## Basic SVG Export
+
+Export the raw SVG markup:
+
+```svelte
+<script lang="ts">
+  import { AsciiArt } from 'svelte-asciiart';
+  let svg = $state<SVGSVGElement>();
+  const text = `+----------+
+|  Hello   |
+|  World!  |
++----------+`;
+
+  async function downloadSvg() {
+    if (!svg) return;
+    const markup = svg.outerHTML;
+    const blob = new Blob([markup], { type: 'image/svg+xml' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'ascii-art.svg';
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+</script>
+
+<AsciiArt bind:svg {text} />
+
+{#if svg}
+  <button type="button" onclick={downloadSvg}>
+    Download SVG
+  </button>
+{/if}
+```
+
+<Note>
+Raw SVG export uses `svg.outerHTML`, which includes the SVG structure but relies on external CSS classes for styling.
+</Note>
+
+## SVG Export with Embedded Styles
+
+Export SVG with all styles embedded (no external CSS dependencies):
+
+```svelte
+<script lang="ts">
+  import { AsciiArt, exportSvg } from 'svelte-asciiart';
+  let svg = $state<SVGSVGElement>();
+  const text = `+----------+
+|  Hello   |
+|  World!  |
++----------+`;
+
+  async function downloadStyledSvg() {
+    if (!svg) return;
+    const markup = exportSvg(svg, { 
+      includeBackground: true, 
+      backgroundColor: '#f3f4f6' 
+    });
+    const blob = new Blob([markup], { type: 'image/svg+xml' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'ascii-art-styled.svg';
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+</script>
+
+<AsciiArt bind:svg {text} frame grid />
+
+{#if svg}
+  <button type="button" onclick={downloadStyledSvg}>
+    Download SVG + Styles
+  </button>
+{/if}
+
+<style>
+  :global(.ascii-grid) {
+    stroke: #87CEFA;
+    stroke-width: 0.03;
+    opacity: 0.5;
+  }
+  :global(.ascii-frame) {
+    stroke: #FFB366;
+    stroke-width: 0.05;
+  }
+</style>
+```
+
+<Tip>
+`exportSvg()` embeds all computed styles into the SVG, making it portable and self-contained. Perfect for sharing or embedding in other applications.
+</Tip>
+
+## PNG Export
+
+Convert SVG to PNG format:
+
+<Tabs>
+  <Tab title="Data URL">
+    ```svelte
+    <script lang="ts">
+      import { AsciiArt, exportSvgToPng } from 'svelte-asciiart';
+      let svg = $state<SVGSVGElement>();
+      const text = `+----------+
+|  Hello   |
+|  World!  |
++----------+`;
+
+      async function downloadPng() {
+        if (!svg) return;
+        const dataUrl = await exportSvgToPng(svg, { 
+          includeBackground: true, 
+          backgroundColor: '#ffffff' 
+        });
+        const a = document.createElement('a');
+        a.href = dataUrl;
+        a.download = 'ascii-art.png';
+        a.click();
+      }
+    </script>
+
+    <AsciiArt bind:svg {text} baseSize={50} />
+
+    {#if svg}
+      <button type="button" onclick={downloadPng}>
+        Download PNG
+      </button>
+    {/if}
+    ```
+  </Tab>
+  <Tab title="Blob">
+    ```svelte
+    <script lang="ts">
+      import { AsciiArt, exportSvgToPng } from 'svelte-asciiart';
+      let svg = $state<SVGSVGElement>();
+      const text = `+----------+
+|  Hello   |
+|  World!  |
++----------+`;
+
+      async function downloadPng() {
+        if (!svg) return;
+        const blob = await exportSvgToPng(svg, { 
+          includeBackground: true, 
+          backgroundColor: '#ffffff',
+          output: 'blob'
+        });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'ascii-art.png';
+        a.click();
+        URL.revokeObjectURL(url);
+      }
+    </script>
+
+    <AsciiArt bind:svg {text} baseSize={50} />
+
+    {#if svg}
+      <button type="button" onclick={downloadPng}>
+        Download PNG
+      </button>
+    {/if}
+    ```
+  </Tab>
+</Tabs>
+
+<Note>
+PNG export options:
+- `includeBackground` - Include background color
+- `backgroundColor` - Background color (hex or rgba)
+- `output` - Output format: `'dataUrl'` (default) or `'blob'`
+</Note>
+
+## Copy to Clipboard
+
+Copy ASCII art to clipboard in different formats:
+
+```svelte
+<script lang="ts">
+  import { AsciiArt, exportSvg, exportSvgToPng } from 'svelte-asciiart';
+  let svg = $state<SVGSVGElement>();
+  const text = `+----------+
+|  Hello   |
+|  World!  |
++----------+`;
+
+  async function copySvgRaw() {
+    if (!svg) return;
+    await navigator.clipboard.writeText(svg.outerHTML);
+  }
+
+  async function copySvgStyled() {
+    if (!svg) return;
+    const markup = exportSvg(svg, { 
+      includeBackground: true, 
+      backgroundColor: '#f3f4f6' 
+    });
+    await navigator.clipboard.writeText(markup);
+  }
+
+  async function copyPng() {
+    if (!svg) return;
+    const blob = await exportSvgToPng(svg, { 
+      includeBackground: true, 
+      backgroundColor: '#f3f4f6',
+      output: 'blob'
+    });
+    await navigator.clipboard.write([
+      new ClipboardItem({ 'image/png': blob })
+    ]);
+  }
+</script>
+
+<AsciiArt bind:svg {text} baseSize={50} />
+
+{#if svg}
+  <div class="button-group">
+    <button type="button" onclick={copySvgRaw}>
+      Copy SVG
+    </button>
+    <button type="button" onclick={copySvgStyled}>
+      Copy SVG + Styles
+    </button>
+    <button type="button" onclick={copyPng}>
+      Copy PNG
+    </button>
+  </div>
+{/if}
+```
+
+<Tip>
+Copying as PNG allows pasting directly into image editors, documents, and design tools.
+</Tip>
+
+## Adjusting Export Resolution
+
+Control PNG resolution with the `baseSize` prop:
+
+<CodeGroup>
+```svelte Low Resolution
+<script lang="ts">
+  import { AsciiArt, exportSvgToPng } from 'svelte-asciiart';
+  let svg = $state<SVGSVGElement>();
+  const text = `+----------+
+|  Hello   |
+|  World!  |
++----------+`;
+</script>
+
+<!-- baseSize=30 for smaller file size -->
+<AsciiArt bind:svg {text} baseSize={30} />
+```
+
+```svelte Standard Resolution
+<script lang="ts">
+  import { AsciiArt, exportSvgToPng } from 'svelte-asciiart';
+  let svg = $state<SVGSVGElement>();
+  const text = `+----------+
+|  Hello   |
+|  World!  |
++----------+`;
+</script>
+
+<!-- baseSize=50 (default) -->
+<AsciiArt bind:svg {text} baseSize={50} />
+```
+
+```svelte High Resolution
+<script lang="ts">
+  import { AsciiArt, exportSvgToPng } from 'svelte-asciiart';
+  let svg = $state<SVGSVGElement>();
+  const text = `+----------+
+|  Hello   |
+|  World!  |
++----------+`;
+</script>
+
+<!-- baseSize=100 for crisp exports -->
+<AsciiArt bind:svg {text} baseSize={100} />
+```
+</CodeGroup>
+
+<Note>
+`baseSize` controls the base font size in the SVG:
+- Lower values (20-40): Smaller file sizes, faster rendering
+- Default (50): Balanced quality and performance
+- Higher values (80-150): Higher resolution for print or large displays
+</Note>
+
+## Live Preview with Auto-Export
+
+Create a live PNG preview that updates as styles change:
+
+```svelte
+<script lang="ts">
+  import { AsciiArt, exportSvgToPng } from 'svelte-asciiart';
+  let svg = $state<SVGSVGElement>();
+  let pngPreviewUrl = $state<string | null>(null);
+  let bgColor = $state('#f3f4f6');
+  const text = `+----------+
+|  Hello   |
+|  World!  |
++----------+`;
+
+  // Auto-generate PNG preview when SVG changes (debounced)
+  $effect(() => {
+    if (!svg) {
+      if (pngPreviewUrl) URL.revokeObjectURL(pngPreviewUrl);
+      pngPreviewUrl = null;
+      return;
+    }
+
+    const svgEl = svg;
+    const bg = bgColor;
+
+    const timeout = setTimeout(async () => {
+      try {
+        const blob = await exportSvgToPng(svgEl, { 
+          includeBackground: true, 
+          backgroundColor: bg, 
+          output: 'blob' 
+        });
+        if (pngPreviewUrl) URL.revokeObjectURL(pngPreviewUrl);
+        pngPreviewUrl = URL.createObjectURL(blob);
+      } catch (e) {
+        console.error('Failed to generate PNG:', e);
+        if (pngPreviewUrl) URL.revokeObjectURL(pngPreviewUrl);
+        pngPreviewUrl = null;
+      }
+    }, 200);
+
+    return () => clearTimeout(timeout);
+  });
+</script>
+
+<AsciiArt bind:svg {text} baseSize={50} />
+
+<label>
+  Background Color:
+  <input type="color" bind:value={bgColor} />
+</label>
+
+{#if pngPreviewUrl}
+  <div class="preview">
+    <h3>PNG Export Preview</h3>
+    <img src={pngPreviewUrl} alt="PNG preview" />
+  </div>
+{/if}
+```
+
+<Tip>
+Debounce the export operation (200ms in this example) to avoid excessive re-rendering when users adjust controls rapidly.
+</Tip>
+
+## Complete Export Workflow
+
+A full-featured export component with all formats:
+
+```svelte
+<script lang="ts">
+  import { AsciiArt, exportSvg, exportSvgToPng } from 'svelte-asciiart';
+  let svg = $state<SVGSVGElement>();
+  let copiedSvgRaw = $state(false);
+  let copiedSvgStyles = $state(false);
+  let copiedPng = $state(false);
+  const text = `+----------+       _o<
+|  Hello   |      \`\\,_
+|  World!  |     (_)/ (_)
++----------+`;
+
+  async function copySvgRaw() {
+    if (!svg) return;
+    const markup = svg.outerHTML;
+    await navigator.clipboard.writeText(markup);
+    copiedSvgRaw = true;
+    setTimeout(() => copiedSvgRaw = false, 800);
+  }
+
+  async function copySvgWithStyles() {
+    if (!svg) return;
+    const markup = exportSvg(svg, { 
+      includeBackground: true, 
+      backgroundColor: '#f3f4f6' 
+    });
+    await navigator.clipboard.writeText(markup);
+    copiedSvgStyles = true;
+    setTimeout(() => copiedSvgStyles = false, 800);
+  }
+
+  async function copyPng() {
+    if (!svg) return;
+    const blob = await exportSvgToPng(svg, { 
+      includeBackground: true, 
+      backgroundColor: '#f3f4f6', 
+      output: 'blob' 
+    });
+    await navigator.clipboard.write([
+      new ClipboardItem({ 'image/png': blob })
+    ]);
+    copiedPng = true;
+    setTimeout(() => copiedPng = false, 800);
+  }
+</script>
+
+<AsciiArt 
+  bind:svg 
+  {text}
+  rows={4}
+  cols={22}
+  cellAspect={0.6}
+  grid
+  frame
+  margin={[1, 2, 1, 2]}
+  gridClass="ascii-grid"
+  frameClass="ascii-frame"
+  baseSize={50}
+/>
+
+{#if svg}
+  <div class="export-buttons">
+    <button type="button" onclick={copySvgRaw}>
+      {copiedSvgRaw ? 'Copied!' : 'Copy SVG'}
+    </button>
+    <button type="button" onclick={copySvgWithStyles}>
+      {copiedSvgStyles ? 'Copied!' : 'Copy SVG + Styles'}
+    </button>
+    <button type="button" onclick={copyPng}>
+      {copiedPng ? 'Copied!' : 'Copy PNG'}
+    </button>
+  </div>
+{/if}
+
+<style>
+  :global(.ascii-grid) {
+    stroke: #87CEFA;
+    stroke-width: 0.03;
+    opacity: 0.5;
+  }
+  :global(.ascii-frame) {
+    stroke: #FFB366;
+    stroke-width: 0.05;
+  }
+</style>
+```
+
+<Note>
+This complete example provides:
+- Raw SVG export for web use
+- Styled SVG export for portability
+- PNG export for universal compatibility
+- Visual feedback when copying
+- All styling options (grid, frame, margins)
+</Note>

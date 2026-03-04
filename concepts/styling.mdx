@@ -1,0 +1,482 @@
+---
+title: 'Styling'
+description: 'CSS customization, custom classes, and CSS variables for AsciiArt'
+---
+
+The `AsciiArt` component provides flexible styling options through CSS classes, CSS variables, and standard SVG attributes.
+
+## CSS Variables
+
+The component uses CSS variables for easy theming without prop drilling.
+
+### Font Family
+
+The font family is controlled via the `--ascii-font-family` CSS variable:
+
+```typescript
+style="width: 100%; height: 100%; font-family: var(--ascii-font-family, {defaultFontStack});"
+```
+
+From `AsciiArt.svelte:100`
+
+Default fallback:
+```typescript
+const defaultFontStack = 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace';
+```
+
+From `AsciiArt.svelte:69-70`
+
+<Tip>
+  Set `--ascii-font-family` on a parent element to change the font for all AsciiArt components within.
+</Tip>
+
+### Custom Font Example
+
+```svelte
+<div class="custom-ascii">
+  <AsciiArt text="Custom Font" />
+</div>
+
+<style>
+  .custom-ascii {
+    --ascii-font-family: 'Fira Code', monospace;
+  }
+</style>
+```
+
+<CodeGroup>
+
+```svelte Default Font
+<AsciiArt text="Default" />
+<!-- Uses ui-monospace fallback stack -->
+```
+
+```svelte Custom Font
+<div style="--ascii-font-family: 'JetBrains Mono', monospace">
+  <AsciiArt text="JetBrains" />
+</div>
+```
+
+```svelte Retro Font
+<div style="--ascii-font-family: 'Courier New', monospace">
+  <AsciiArt text="Retro" />
+</div>
+```
+
+</CodeGroup>
+
+## Custom Classes
+
+The component accepts class props for grid and frame elements.
+
+### Grid Class
+
+Style grid lines using the `gridClass` prop:
+
+```svelte
+<AsciiArt 
+  text="Grid" 
+  grid={true}
+  gridClass="custom-grid"
+/>
+
+<style>
+  :global(.custom-grid) {
+    stroke: #3b82f6;
+    stroke-width: 0.02;
+    stroke-dasharray: 0.05 0.05;
+    opacity: 0.5;
+  }
+</style>
+```
+
+<Note>
+  Use `:global()` in Svelte to style elements rendered by the AsciiArt component, as they're in a different component scope.
+</Note>
+
+### Frame Class
+
+Style the frame rectangle using the `frameClass` prop:
+
+```svelte
+<AsciiArt 
+  text="Framed" 
+  frame={true}
+  frameClass="custom-frame"
+/>
+
+<style>
+  :global(.custom-frame) {
+    stroke: #ef4444;
+    stroke-width: 0.1;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+</style>
+```
+
+## SVG Attributes
+
+The component spreads additional props to the root `<svg>` element:
+
+```typescript
+interface Props extends SVGAttributes<SVGSVGElement> {
+  text: string;
+  rows?: number;
+  cols?: number;
+  // ...
+}
+
+let { text, rows, cols, /* ... */, ...rest }: Props = $props();
+```
+
+From `AsciiArt.svelte:7-36`
+
+This allows you to pass any valid SVG attribute:
+
+```svelte
+<AsciiArt 
+  text="Styled" 
+  class="my-svg"
+  id="ascii-art-1"
+  style="background: #f3f4f6;"
+  aria-label="ASCII art rendering"
+/>
+```
+
+<Info>
+  SVG attributes like `class`, `style`, `id`, and ARIA attributes are passed directly to the `<svg>` element.
+</Info>
+
+## Color and Fill
+
+Text color is controlled via `currentColor`, making it inherit from parent CSS:
+
+```svelte
+<text
+  y={fmt(offsetY + r * cellHeight + 0.8 * cellHeight)}
+  font-size={fmt(0.9 * cellHeight)}
+  fill="currentColor"
+  xml:space="preserve"
+>
+```
+
+From `AsciiArt.svelte:125-130`
+
+### Setting Text Color
+
+<CodeGroup>
+
+```svelte CSS Color
+<div style="color: #3b82f6;">
+  <AsciiArt text="Blue" />
+</div>
+```
+
+```svelte Tailwind
+<div class="text-red-500">
+  <AsciiArt text="Red" />
+</div>
+```
+
+```svelte Direct Style
+<AsciiArt 
+  text="Green" 
+  style="color: #10b981;"
+/>
+```
+
+</CodeGroup>
+
+## Complete Styling Example
+
+Here's a comprehensive example combining multiple styling techniques:
+
+```svelte
+<script>
+  import { AsciiArt } from 'svelte-asciiart';
+</script>
+
+<div class="diagram-container">
+  <AsciiArt 
+    text={`
+┌─────────┐
+│  Title  │
+├─────────┤
+│ Content │
+└─────────┘
+    `}
+    grid={true}
+    frame={true}
+    margin={1}
+    gridClass="diagram-grid"
+    frameClass="diagram-frame"
+    class="diagram-svg"
+    style="background: linear-gradient(to bottom, #f9fafb, #f3f4f6);"
+  />
+</div>
+
+<style>
+  .diagram-container {
+    --ascii-font-family: 'Fira Code', monospace;
+    color: #1f2937;
+    max-width: 600px;
+    padding: 2rem;
+    border-radius: 0.5rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  }
+  
+  :global(.diagram-grid) {
+    stroke: #d1d5db;
+    stroke-width: 0.01;
+    opacity: 0.4;
+  }
+  
+  :global(.diagram-frame) {
+    stroke: #3b82f6;
+    stroke-width: 0.05;
+    stroke-linecap: round;
+  }
+  
+  :global(.diagram-svg) {
+    border-radius: 0.25rem;
+  }
+</style>
+```
+
+## Style Extraction for Export
+
+When exporting to SVG or PNG, styles are automatically embedded using the utility functions:
+
+```typescript
+function extractClassStyles(svgEl: SVGSVGElement): string {
+  const styleRules: string[] = [];
+  const processedClasses = new Set<string>();
+  const elementsWithClasses = svgEl.querySelectorAll('[class]');
+  
+  elementsWithClasses.forEach((el) => {
+    const classAttr = el.getAttribute('class')!;
+    const classes = classAttr.split(/\s+/).filter(Boolean);
+    
+    classes.forEach((className) => {
+      if (processedClasses.has(className)) return;
+      processedClasses.add(className);
+      
+      const computed = getComputedStyle(el);
+      const declarations: string[] = [];
+      
+      SVG_STYLE_PROPS.forEach((prop) => {
+        const value = computed.getPropertyValue(prop);
+        if (!value || (value === 'none' && prop !== 'fill')) return;
+        declarations.push(`${prop}: ${value}`);
+      });
+      
+      if (declarations.length) {
+        styleRules.push(`.${className} { ${declarations.join('; ')} }`);
+      }
+    });
+  });
+  
+  return styleRules.join('\n');
+}
+```
+
+From `utils.ts:21-54`
+
+<Info>
+  Styles are extracted from mounted DOM elements, so the SVG must be rendered in the browser before exporting.
+</Info>
+
+### Supported Style Properties
+
+The following CSS properties are extracted for export:
+
+```typescript
+const SVG_STYLE_PROPS = [
+  'fill',
+  'stroke',
+  'stroke-width',
+  'stroke-linecap',
+  'stroke-linejoin',
+  'stroke-dasharray',
+  'opacity',
+  'font-family',
+  'font-size',
+  'font-weight',
+  'color',
+  'paint-order'
+] as const;
+```
+
+From `utils.ts:2-15`
+
+## Responsive Sizing
+
+The SVG is styled to be responsive by default:
+
+```typescript
+style="width: 100%; height: 100%; /* ... */"
+```
+
+<Accordion title="How does responsive sizing work?">
+  The SVG has intrinsic dimensions set via `width` and `height` attributes, but the inline style overrides these with `width: 100%; height: 100%`. This makes the SVG fill its container while the `preserveAspectRatio="xMinYMin meet"` attribute ensures the aspect ratio is maintained.
+</Accordion>
+
+### Container-Based Sizing
+
+```svelte
+<div style="width: 400px; height: 300px;">
+  <AsciiArt text="Fits container" />
+</div>
+```
+
+The AsciiArt component will fill the 400×300 container while maintaining its aspect ratio.
+
+### Fixed Size
+
+```svelte
+<AsciiArt 
+  text="Fixed" 
+  style="width: 200px; height: 100px;"
+/>
+```
+
+<Tip>
+  Override the default `width: 100%; height: 100%;` style to set fixed dimensions.
+</Tip>
+
+## Dark Mode Support
+
+Use CSS variables and `currentColor` for automatic dark mode support:
+
+```svelte
+<div class="themed-ascii">
+  <AsciiArt 
+    text="Dark mode" 
+    grid={true}
+    gridClass="themed-grid"
+  />
+</div>
+
+<style>
+  .themed-ascii {
+    color: #1f2937;
+    background: white;
+  }
+  
+  :global(.dark) .themed-ascii {
+    color: #f3f4f6;
+    background: #1f2937;
+  }
+  
+  :global(.themed-grid) {
+    stroke: currentColor;
+    opacity: 0.2;
+  }
+</style>
+```
+
+<CodeGroup>
+
+```svelte Tailwind Dark Mode
+<div class="text-gray-900 dark:text-gray-100">
+  <AsciiArt text="Auto theme" />
+</div>
+```
+
+```svelte CSS Custom Properties
+<div style="color: var(--text-color);">
+  <AsciiArt text="Theme from var" />
+</div>
+```
+
+```svelte prefers-color-scheme
+<style>
+  .ascii-wrapper {
+    color: #000;
+  }
+  
+  @media (prefers-color-scheme: dark) {
+    .ascii-wrapper {
+      color: #fff;
+    }
+  }
+</style>
+
+<div class="ascii-wrapper">
+  <AsciiArt text="System theme" />
+</div>
+```
+
+</CodeGroup>
+
+## Advanced Styling Techniques
+
+### Text Shadow
+
+```svelte
+<AsciiArt 
+  text="Shadow" 
+  style="filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.3));"
+/>
+```
+
+### Gradient Text
+
+```svelte
+<svg>
+  <defs>
+    <linearGradient id="textGradient">
+      <stop offset="0%" stop-color="#3b82f6" />
+      <stop offset="100%" stop-color="#8b5cf6" />
+    </linearGradient>
+  </defs>
+</svg>
+
+<AsciiArt 
+  text="Gradient" 
+  style="fill: url(#textGradient);"
+/>
+```
+
+<Note>
+  When using `fill` in inline styles, it overrides the default `fill="currentColor"` from the text elements.
+</Note>
+
+### Animations
+
+```svelte
+<AsciiArt 
+  text="Animated" 
+  class="animated-ascii"
+/>
+
+<style>
+  :global(.animated-ascii) {
+    animation: pulse 2s ease-in-out infinite;
+  }
+  
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+  }
+</style>
+```
+
+### Stroke Text Effect
+
+```svelte
+<AsciiArt 
+  text="Outlined" 
+  style="
+    fill: white;
+    stroke: black;
+    stroke-width: 0.02;
+    paint-order: stroke fill;
+  "
+/>
+```
+
+<Tip>
+  The `paint-order: stroke fill` property ensures the stroke is rendered behind the fill, creating a clean outline effect.
+</Tip>

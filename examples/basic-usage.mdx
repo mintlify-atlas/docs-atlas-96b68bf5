@@ -1,0 +1,218 @@
+---
+title: 'Basic Usage'
+description: 'Simple examples for common use cases with svelte-asciiart'
+---
+
+## Installation
+
+First, install the package:
+
+```bash
+npm install svelte-asciiart
+```
+
+## Simple ASCII Art
+
+The most basic usage - just render ASCII art as SVG:
+
+<CodeGroup>
+```svelte Simple Example
+<script lang="ts">
+  import { AsciiArt } from 'svelte-asciiart';
+  const text = `+----------+
+|  Hello   |
+|  World!  |
++----------+`;
+</script>
+
+<AsciiArt {text} />
+```
+
+```svelte With Auto Sizing
+<script lang="ts">
+  import { AsciiArt } from 'svelte-asciiart';
+  const text = `   _o<
+  \`\\,_
+ (_)/ (_)`;
+</script>
+
+<AsciiArt {text} />
+```
+</CodeGroup>
+
+<Tip>
+When you don't specify `rows` or `cols`, the component automatically calculates the optimal size based on your ASCII art content.
+</Tip>
+
+## Controlling Canvas Size
+
+You can explicitly set the canvas dimensions:
+
+```svelte
+<script lang="ts">
+  import { AsciiArt } from 'svelte-asciiart';
+  const text = `+----------+
+|  Hello   |
+|  World!  |
++----------+`;
+</script>
+
+<AsciiArt
+  {text}
+  rows={4}
+  cols={22}
+/>
+```
+
+<Note>
+- `rows`: Number of character rows in the grid
+- `cols`: Number of character columns in the grid
+- Omit either property to auto-calculate based on content
+</Note>
+
+## Adjusting Cell Aspect Ratio
+
+Monospace fonts typically have a height-to-width ratio. Adjust `cellAspect` to match your font:
+
+<Tabs>
+  <Tab title="Default (0.6)">
+    ```svelte
+    <script lang="ts">
+      import { AsciiArt } from 'svelte-asciiart';
+      const text = `+----------+
+|  Hello   |
+|  World!  |
++----------+`;
+    </script>
+
+    <AsciiArt
+      {text}
+      cellAspect={0.6}
+    />
+    ```
+  </Tab>
+  <Tab title="Wider (0.8)">
+    ```svelte
+    <script lang="ts">
+      import { AsciiArt } from 'svelte-asciiart';
+      const text = `+----------+
+|  Hello   |
+|  World!  |
++----------+`;
+    </script>
+
+    <AsciiArt
+      {text}
+      cellAspect={0.8}
+    />
+    ```
+  </Tab>
+  <Tab title="Square (1.0)">
+    ```svelte
+    <script lang="ts">
+      import { AsciiArt } from 'svelte-asciiart';
+      const text = `+----------+
+|  Hello   |
+|  World!  |
++----------+`;
+    </script>
+
+    <AsciiArt
+      {text}
+      cellAspect={1.0}
+    />
+    ```
+  </Tab>
+</Tabs>
+
+<Tip>
+Typical monospace fonts work well with values between 0.5 and 0.7. Experiment to find what looks best for your font.
+</Tip>
+
+## Adding Margins
+
+Control spacing around your ASCII art:
+
+<CodeGroup>
+```svelte Uniform Margin
+<script lang="ts">
+  import { AsciiArt } from 'svelte-asciiart';
+  const text = `+----------+
+|  Hello   |
+|  World!  |
++----------+`;
+</script>
+
+<AsciiArt
+  {text}
+  margin={2}
+/>
+```
+
+```svelte Vertical/Horizontal
+<script lang="ts">
+  import { AsciiArt } from 'svelte-asciiart';
+  const text = `+----------+
+|  Hello   |
+|  World!  |
++----------+`;
+</script>
+
+<AsciiArt
+  {text}
+  margin={[1, 2]}
+/>
+```
+
+```svelte All Sides
+<script lang="ts">
+  import { AsciiArt } from 'svelte-asciiart';
+  const text = `+----------+
+|  Hello   |
+|  World!  |
++----------+`;
+</script>
+
+<AsciiArt
+  {text}
+  margin={[1, 2, 1, 2]}
+/>
+```
+</CodeGroup>
+
+<Note>
+Margin values are in character cell units:
+- Single number: all sides
+- `[vertical, horizontal]`: top/bottom, left/right
+- `[top, right, bottom, left]`: individual sides
+</Note>
+
+## Binding the SVG Element
+
+Get a reference to the underlying SVG element for further manipulation:
+
+```svelte
+<script lang="ts">
+  import { AsciiArt } from 'svelte-asciiart';
+  let svg = $state<SVGSVGElement>();
+  const text = `+----------+
+|  Hello   |
+|  World!  |
++----------+`;
+</script>
+
+<AsciiArt
+  bind:svg
+  {text}
+/>
+
+{#if svg}
+  <button type="button" onclick={() => navigator.clipboard.writeText(svg.outerHTML)}>
+    Copy SVG
+  </button>
+{/if}
+```
+
+<Tip>
+Binding the SVG element is useful when you want to export or manipulate the generated SVG. See [Export Workflows](/examples/export-workflows) for more examples.
+</Tip>

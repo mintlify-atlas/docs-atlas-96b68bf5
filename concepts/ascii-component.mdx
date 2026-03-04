@@ -1,0 +1,238 @@
+---
+title: 'AsciiArt Component'
+description: 'Understanding the SVG rendering approach and core component architecture'
+---
+
+The `AsciiArt` component is the heart of svelte-asciiart. It transforms multi-line text strings into scalable SVG graphics using a character-by-character rendering approach.
+
+## How It Works
+
+The component uses SVG as its rendering engine, creating resolution-independent graphics that can be scaled, styled, and exported. Each character is positioned individually using SVG `<text>` and `<tspan>` elements.
+
+### Rendering Architecture
+
+<Info>
+  The component renders one `<text>` element per row, with each character as a `<tspan>` positioned using absolute x-coordinates.
+</Info>
+
+Here's how the rendering works:
+
+```svelte
+{#each gridRows as r}
+  <text
+    y={fmt(offsetY + r * cellHeight + 0.8 * cellHeight)}
+    font-size={fmt(0.9 * cellHeight)}
+    fill="currentColor"
+    xml:space="preserve"
+  >
+    {#each gridCols as c}
+      <tspan x={fmt(offsetX + c * cellAspect + 0.1 * cellAspect)}>{charAt(r, c)}</tspan>
+    {/each}
+  </text>
+{/each}
+```
+
+From `AsciiArt.svelte:124-135`
+
+### Character Positioning
+
+Each character is positioned using a coordinate system based on:
+
+- **Cell Height**: Fixed at `1` viewBox unit per row
+- **Cell Aspect**: Default `0.6` (width-to-height ratio for monospace fonts)
+- **Offsets**: Applied when using margins
+
+The positioning calculation for each character:
+
+```typescript
+// X position for character at column c
+x = offsetX + c * cellAspect + 0.1 * cellAspect
+
+// Y position for character at row r  
+y = offsetY + r * cellHeight + 0.8 * cellHeight
+```
+
+<Note>
+  The `0.1` horizontal offset and `0.8` vertical offset are fine-tuned to center characters within their cells and ensure proper baseline alignment.
+</Note>
+
+## ViewBox Coordinate System
+
+The component uses SVG's `viewBox` attribute to create a resolution-independent coordinate system.
+
+### ViewBox Calculation
+
+The viewBox dimensions are calculated from the frame size and margins:
+
+```typescript
+const totalCols = frameCols + parsedMargin.left + parsedMargin.right;
+const totalRows = frameRows + parsedMargin.top + parsedMargin.bottom;
+const viewBoxWidth = totalCols * cellAspect;
+const viewBoxHeight = totalRows * cellHeight;
+```
+
+From `AsciiArt.svelte:73-76`
+
+### Example Calculation
+
+For text with 5 columns and 2 rows, no margins:
+
+```
+viewBoxWidth = 5 * 0.6 = 3
+viewBoxHeight = 2 * 1 = 2
+viewBox = "0 0 3 2"
+```
+
+<CodeGroup>
+
+```svelte Basic Usage
+<AsciiArt text="Hello\nWorld" />
+<!-- viewBox: "0 0 3 2" (5 cols × 2 rows) -->
+```
+
+```svelte With Margins
+<AsciiArt 
+  text="Hi" 
+  margin={1}
+/>
+<!-- Adds 1 unit margin on all sides -->
+<!-- viewBox: "0 0 1.8 3" (2+1+1 cols × 1+1+1 rows) -->
+```
+
+```svelte Custom Frame Size
+<AsciiArt 
+  text="Hi" 
+  rows={10} 
+  cols={20}
+/>
+<!-- viewBox: "0 0 12 10" (20 cols × 10 rows) -->
+```
+
+</CodeGroup>
+
+## Cell Aspect Ratio
+
+Monospace fonts are not square - they're typically taller than they are wide. The `cellAspect` prop controls this ratio.
+
+<Tip>
+  The default `cellAspect={0.6}` works well for most monospace fonts. Adjust this value if your font appears stretched or compressed.
+</Tip>
+
+### How It Affects Rendering
+
+```typescript
+// Cell dimensions in viewBox units
+const cellHeight = 1;  // Fixed
+const cellWidth = cellAspect;  // Typically 0.6
+```
+
+From `AsciiArt.svelte:68-69`
+
+With `cellAspect={0.6}`:
+- A 10x10 character grid becomes a `6×10` viewBox
+- Characters appear naturally proportioned
+- Horizontal spacing matches vertical spacing visually
+
+With `cellAspect={1.0}`:
+- A 10x10 character grid becomes a `10×10` viewBox  
+- Characters may appear horizontally stretched
+- Useful for square grid layouts
+
+## Intrinsic Size
+
+The component sets intrinsic width and height for proper export and embedding:
+
+```typescript
+const intrinsicWidth = fmt(viewBoxWidth * baseSize);
+const intrinsicHeight = fmt(viewBoxHeight * baseSize);
+```
+
+From `AsciiArt.svelte:87-88`
+
+<Accordion title="What is baseSize?">
+  The `baseSize` prop (default: `50`) controls the intrinsic pixel dimensions of the SVG. This affects:
+  
+  - Default display size when no CSS is applied
+  - Export resolution for PNG conversion
+  - File size when saving SVG
+  
+  Higher values produce larger, higher-resolution outputs but increase file size.
+</Accordion>
+
+### Responsive Display
+
+Despite having intrinsic dimensions, the SVG is styled to be responsive:
+
+```typescript
+style="width: 100%; height: 100%; font-family: var(--ascii-font-family, {defaultFontStack});"
+```
+
+From `AsciiArt.svelte:100`
+
+This ensures the component fills its container while maintaining aspect ratio.
+
+## Text Processing
+
+The component automatically processes input text:
+
+```typescript
+const lines = text.split('\n');
+const contentRows = lines.length;
+const contentCols = Math.max(0, ...lines.map((l) => l.length));
+const paddedLines = lines.map((l) => l.padEnd(renderCols, ' '));
+```
+
+From `AsciiArt.svelte:54-62`
+
+### Processing Steps
+
+1. **Split** text into lines by newline characters
+2. **Calculate** dimensions (longest line = cols, line count = rows)
+3. **Pad** short lines with spaces for consistent width
+4. **Render** character-by-character using nested loops
+
+<Note>
+  Spaces are important! They're rendered as actual `<tspan>` elements to maintain grid alignment.
+</Note>
+
+## SVG Structure
+
+The final SVG structure looks like this:
+
+```xml
+<svg viewBox="0 0 3 2" width="150" height="100">
+  <!-- Optional grid lines -->
+  <path d="M 0 0 V 2 M 0.6 0 V 2 ..." />
+  
+  <!-- Optional frame -->
+  <rect x="0" y="0" width="3" height="2" />
+  
+  <!-- Text content -->
+  <text y="0.8" font-size="0.9">
+    <tspan x="0.06">H</tspan>
+    <tspan x="0.66">e</tspan>
+    <tspan x="1.26">l</tspan>
+    <!-- ... -->
+  </text>
+  <text y="1.8" font-size="0.9">
+    <!-- Second row -->
+  </text>
+</svg>
+```
+
+## Performance Characteristics
+
+<Info>
+  The component uses Svelte's reactive derivations (`$derived`) to efficiently recalculate dimensions only when props change.
+</Info>
+
+For a 80×24 character display (typical terminal size):
+- **1,920** `<tspan>` elements (80 × 24)
+- **24** `<text>` elements (one per row)
+- Renders in < 5ms on modern browsers
+
+### When to Use baseSize
+
+- **Low values (10-30)**: Small file sizes, suitable for web display
+- **Medium values (50-100)**: Default, balanced quality
+- **High values (200+)**: High-resolution exports, printing

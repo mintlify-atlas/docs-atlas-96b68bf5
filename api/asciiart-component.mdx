@@ -1,0 +1,130 @@
+---
+title: "AsciiArt Component"
+description: "Complete API reference for the AsciiArt Svelte component with all props and configuration options"
+---
+
+## Component
+
+```svelte
+import { AsciiArt } from 'svelte-asciiart';
+```
+
+The `AsciiArt` component renders ASCII art text as an SVG with automatic layout, optional grid lines, and frame support.
+
+## Props
+
+<ParamField path="text" type="string" required>
+  The ASCII art text to render. Supports multi-line text with `\n` line breaks.
+</ParamField>
+
+<ParamField path="rows" type="number">
+  Number of rows for the frame. If not provided, automatically calculated from the text content.
+</ParamField>
+
+<ParamField path="cols" type="number">
+  Number of columns for the frame. If not provided, automatically calculated from the text content.
+</ParamField>
+
+<ParamField path="grid" type="boolean" default="false">
+  Whether to display grid lines showing the character cell boundaries.
+</ParamField>
+
+<ParamField path="cellAspect" type="number" default="0.6">
+  Width-to-height aspect ratio for monospace characters. Typically ~0.6 for most monospace fonts.
+</ParamField>
+
+<ParamField path="gridClass" type="string" default="''">
+  CSS class name to apply to the grid lines path element.
+</ParamField>
+
+<ParamField path="frame" type="boolean" default="false">
+  Whether to display a frame (rectangle) around the content area.
+</ParamField>
+
+<ParamField path="margin" type="number | [number, number] | [number, number, number, number]" default="0">
+  Margin around the frame in character units. Can be:
+  - A single number for all sides
+  - `[vertical, horizontal]` for top/bottom and left/right
+  - `[top, right, bottom, left]` for individual sides
+</ParamField>
+
+<ParamField path="frameClass" type="string" default="''">
+  CSS class name to apply to the frame rectangle element.
+</ParamField>
+
+<ParamField path="svg" type="SVGSVGElement | null">
+  Bindable reference to the underlying SVG element. Use `bind:svg` to get access to the DOM element for export functions.
+  
+  ```svelte
+  <script>
+    let svg = $state();
+  </script>
+  
+  <AsciiArt text="..." bind:svg />
+  ```
+</ParamField>
+
+<ParamField path="baseSize" type="number" default="50">
+  Pixels per viewBox unit for calculating intrinsic SVG size. Higher values produce larger default renders.
+</ParamField>
+
+## SVG Attributes
+
+The component accepts all standard `SVGAttributes<SVGSVGElement>` in addition to the props above. These are spread onto the root `<svg>` element.
+
+Common attributes you might want to use:
+- `class` - CSS class for the SVG element
+- `style` - Inline styles
+- `id` - Element ID
+- `aria-label` - Accessibility label
+
+## Example
+
+```svelte
+<script>
+  import { AsciiArt } from 'svelte-asciiart';
+  
+  let svg = $state();
+  
+  const art = `
+╔═══════════╗
+║ Hello!    ║
+╚═══════════╝
+  `.trim();
+</script>
+
+<AsciiArt 
+  text={art}
+  bind:svg
+  grid={true}
+  frame={true}
+  margin={1}
+  cellAspect={0.6}
+  class="my-ascii-art"
+  style="max-width: 400px;"
+/>
+```
+
+## Styling
+
+The component uses CSS custom properties for styling:
+
+- `--ascii-font-family` - Override the monospace font stack (defaults to system monospace fonts)
+
+You can also style the SVG elements directly using the `class`, `gridClass`, and `frameClass` props:
+
+```css
+:global(.my-ascii-art) {
+  --ascii-font-family: 'Courier New', monospace;
+}
+
+:global(.my-grid) {
+  stroke: #ccc;
+  stroke-width: 0.01;
+}
+
+:global(.my-frame) {
+  stroke: black;
+  stroke-width: 0.05;
+}
+```

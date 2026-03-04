@@ -1,80 +1,284 @@
 ---
-title: "Quickstart"
-description: "Start building awesome documentation in minutes"
+title: Quickstart
+description: Create your first ASCII art SVG in minutes with Svelte ASCII Art
 ---
 
-## Get started in three steps
+## Create your first ASCII art SVG
 
-Get your documentation site running locally and make your first customization.
+This guide will walk you through creating a simple ASCII art SVG using Svelte ASCII Art. You'll learn the basics of rendering ASCII art and applying visual enhancements.
 
-### Step 1: Set up your local environment
+<Note>
+Make sure you've [installed svelte-asciiart](/installation) before following this guide.
+</Note>
 
-<AccordionGroup>
-  <Accordion icon="copy" title="Clone your docs locally">
-    During the onboarding process, you created a GitHub repository with your docs content if you didn't already have one. You can find a link to this repository in your [dashboard](https://dashboard.mintlify.com).
+## Step 1: Basic rendering
+
+Create a new Svelte component and import the `AsciiArt` component:
+
+```svelte +page.svelte
+<script>
+  import { AsciiArt } from 'svelte-asciiart';
+
+  const text = `+----------+
+|  Hello   |
+|  World!  |
++----------+`;
+</script>
+
+<AsciiArt {text} />
+```
+
+This renders your ASCII art as a scalable SVG. The component automatically calculates the correct viewBox dimensions based on your text content.
+
+<Tip>
+ASCII art is rendered character-by-character. Each character becomes an SVG `<tspan>` element positioned on a precise coordinate grid.
+</Tip>
+
+## Step 2: Add a grid overlay
+
+Enable the grid to visualize the character grid:
+
+```svelte
+<AsciiArt {text} grid gridClass="ascii-grid" />
+
+<style>
+  :global(.ascii-grid) {
+    stroke: #90ee90;
+    stroke-width: 0.03;
+    opacity: 0.5;
+  }
+</style>
+```
+
+The grid spans the entire viewBox and helps you visualize how characters align on the coordinate system.
+
+## Step 3: Add a frame and margin
+
+Add a frame border with margin spacing:
+
+```svelte
+<AsciiArt 
+  {text} 
+  grid 
+  frame 
+  margin={[1, 2]} 
+  gridClass="ascii-grid" 
+  frameClass="ascii-frame" 
+/>
+
+<style>
+  :global(.ascii-grid) {
+    stroke: #90ee90;
+    stroke-width: 0.03;
+    opacity: 0.5;
+  }
+  
+  :global(.ascii-frame) {
+    stroke: #ffb366;
+    stroke-width: 0.05;
+  }
+</style>
+```
+
+The `margin` prop accepts:
+- A single number: `margin={2}` (uniform margin)
+- Two numbers: `margin={[1, 2]}` (vertical, horizontal)
+- Four numbers: `margin={[1, 2, 1, 2]}` (top, right, bottom, left)
+
+Margin values are in grid cells, making it intuitive to work with character-based layouts.
+
+## Step 4: Customize the cell aspect ratio
+
+Adjust the character cell width-to-height ratio:
+
+```svelte
+<AsciiArt 
+  {text} 
+  grid 
+  frame 
+  margin={[1, 2]} 
+  cellAspect={0.6}
+  gridClass="ascii-grid" 
+  frameClass="ascii-frame" 
+/>
+```
+
+The default `cellAspect` is `0.6`, which matches most monospace fonts. Adjust this value if your ASCII art looks stretched or compressed:
+
+- `0.5` - Narrower characters
+- `0.6` - Default, works well with most fonts
+- `0.8` - Wider characters
+
+## Step 5: Export your SVG
+
+Bind the SVG element to access export functions:
+
+```svelte
+<script>
+  import { AsciiArt, exportSvg, exportSvgToPng } from 'svelte-asciiart';
+
+  const text = `+----------+
+|  Hello   |
+|  World!  |
++----------+`;
+
+  let svg = $state();
+
+  async function downloadSvg() {
+    if (!svg) return;
     
-    To clone the repository locally so that you can make and preview changes to your docs, follow the [Cloning a repository](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository) guide in the GitHub docs.
-  </Accordion>
-  <Accordion icon="rectangle-terminal" title="Start the preview server">
-    1. Install the Mintlify CLI: `npm i -g mint`
-    2. Navigate to your docs directory and run: `mint dev`
-    3. Open `http://localhost:3000` to see your docs live!
+    const markup = exportSvg(svg, {
+      includeBackground: true,
+      backgroundColor: '#f3f4f6'
+    });
     
-    <Tip>Your preview updates automatically as you edit files.</Tip>
-  </Accordion>
-</AccordionGroup>
+    const blob = new Blob([markup], { type: 'image/svg+xml' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'ascii-art.svg';
+    a.click();
+    URL.revokeObjectURL(url);
+  }
 
-### Step 2: Deploy your changes
-
-<AccordionGroup>
-  <Accordion icon="github" title="Install our GitHub app">
-    Install the Mintlify GitHub app from your [dashboard](https://dashboard.mintlify.com/settings/organization/github-app).
+  async function downloadPng() {
+    if (!svg) return;
     
-    Our GitHub app automatically deploys your changes to your docs site, so you don't need to manage deployments yourself.
-</Accordion>
-<Accordion icon="palette" title="Update your site name and colors">
-    For a first change, let's update the name and colors of your docs site.
+    const dataUrl = await exportSvgToPng(svg, {
+      includeBackground: true,
+      backgroundColor: '#f3f4f6',
+      scale: 2
+    });
+    
+    const a = document.createElement('a');
+    a.href = dataUrl;
+    a.download = 'ascii-art.png';
+    a.click();
+  }
+</script>
 
-    1. Open `docs.json` in your editor.
-    2. Change the `"name"` field to your project name.
-    3. Update the `"colors"` to match your brand.
-    4. Save and see your changes instantly at `http://localhost:3000`.
+<AsciiArt 
+  bind:svg
+  {text} 
+  grid 
+  frame 
+  margin={[1, 2]} 
+  gridClass="ascii-grid" 
+  frameClass="ascii-frame" 
+/>
 
-    <Tip>Try changing the primary color to see an immediate difference!</Tip>
-  </Accordion>
-</AccordionGroup>
+<button onclick={downloadSvg}>Download SVG</button>
+<button onclick={downloadPng}>Download PNG</button>
 
-### Step 3: Go live
+<style>
+  :global(.ascii-grid) {
+    stroke: #90ee90;
+    stroke-width: 0.03;
+    opacity: 0.5;
+  }
+  
+  :global(.ascii-frame) {
+    stroke: #ffb366;
+    stroke-width: 0.05;
+  }
+</style>
+```
 
-<Accordion icon="rocket" title="Publish your docs">
-  1. Commit and push your changes.
-  2. Your docs will update and be live in moments!
-</Accordion>
+The `exportSvg` function extracts computed styles from your styled elements and embeds them in the SVG, making it portable and self-contained.
+
+<Warning>
+Export functions require a browser environment. Always call them in event handlers or client-side code, not during SSR.
+</Warning>
+
+## Complete example
+
+Here's a complete working example combining all the features:
+
+```svelte App.svelte
+<script>
+  import { AsciiArt, exportSvg, exportSvgToPng } from 'svelte-asciiart';
+
+  const text = `+----------+     _o<
+|  Hello   |    \`\\,_
+|  World!  |   (_)/ (_)
++----------+`;
+
+  let svg = $state();
+
+  async function copyToClipboard() {
+    if (!svg) return;
+    const markup = exportSvg(svg, {
+      includeBackground: true,
+      backgroundColor: '#f3f4f6'
+    });
+    await navigator.clipboard.writeText(markup);
+    alert('SVG copied to clipboard!');
+  }
+</script>
+
+<div class="container">
+  <AsciiArt 
+    bind:svg
+    {text} 
+    grid 
+    frame 
+    margin={[1, 2]} 
+    cellAspect={0.6}
+    gridClass="ascii-grid" 
+    frameClass="ascii-frame" 
+  />
+  
+  <button onclick={copyToClipboard}>
+    Copy SVG to clipboard
+  </button>
+</div>
+
+<style>
+  .container {
+    max-width: 600px;
+    margin: 2rem auto;
+  }
+  
+  :global(.ascii-grid) {
+    stroke: #87cefa;
+    stroke-width: 0.03;
+    opacity: 0.5;
+  }
+  
+  :global(.ascii-frame) {
+    stroke: #ffb366;
+    stroke-width: 0.05;
+  }
+  
+  button {
+    margin-top: 1rem;
+    padding: 0.5rem 1rem;
+    background: #ff3e00;
+    color: white;
+    border: none;
+    border-radius: 0.25rem;
+    cursor: pointer;
+  }
+  
+  button:hover {
+    background: #ff6b35;
+  }
+</style>
+```
 
 ## Next steps
 
-Now that you have your docs running, explore these key features:
-
 <CardGroup cols={2}>
-
-<Card title="Write Content" icon="pen-to-square" href="/essentials/markdown">
-  Learn MDX syntax and start writing your documentation.
-</Card>
-
-<Card title="Customize style" icon="palette" href="/essentials/settings">
-  Make your docs match your brand perfectly.
-</Card>
-
-<Card title="Add code examples" icon="square-code" href="/essentials/code">
-  Include syntax-highlighted code blocks.
-</Card>
-
-<Card title="API documentation" icon="code" href="/api-reference/introduction">
-  Auto-generate API docs from OpenAPI specs.
-</Card>
-
+  <Card title="Component props" icon="sliders" href="/guides/props">
+    Learn about all available props and options
+  </Card>
+  <Card title="Grid mode" icon="grid" href="/concepts/grid-mode">
+    Understand how grid mode works in detail
+  </Card>
+  <Card title="Custom styling" icon="palette" href="/concepts/styling">
+    Apply advanced CSS styling to your ASCII art
+  </Card>
+  <Card title="Export guide" icon="file-export" href="/guides/exporting">
+    Master SVG and PNG export workflows
+  </Card>
 </CardGroup>
-
-<Note>
-  **Need help?** See our [full documentation](https://mintlify.com/docs) or join our [community](https://mintlify.com/community).
-</Note>
